@@ -3,6 +3,11 @@ vector = require "hump.vector"
 Camera = require "hump.camera"
 Class = require "hump.class"
 
+package.path = package.path .. ";penlight/lua/?.lua"
+local pl = require('pl.import_into')()
+local C= require 'pl.comprehension' . new()
+
+
 
 Part = Class{
 	init = function(self)
@@ -10,6 +15,8 @@ Part = Class{
 		self.position = vector(0, 0)
 		self.connected = {}
 		self.parent = nil
+		self.size = 1
+		self.rotation = 0
 	end,
 	name="Part"
 }
@@ -36,16 +43,24 @@ function Part:getHandlePositions_Rel()
 end
 
 function Part:getHandlePositions_Abs()
-	res = {}
+	local res = {}
 	for i, pos in pairs(self:getHandlePositions_Rel()) do
 		table.insert(res, pos + self.position)
 	end
 	return res
 end
 
+function Part:getHandleRotation()
+	--to be overwritten
+	return {}
+end
+
 function Part:drawHandles()
 	for i, handle in pairs(self:getHandlePositions_Abs()) do
-		love.graphics.circle("line", handle.x, handle.y, 50, 5)
+		if not self.connected[i] then
+			love.graphics.setColor( 0, 255, 255)
+			love.graphics.circle("line", handle.x, handle.y, 20, 5)
+		end
 	end
 end
 
@@ -56,8 +71,12 @@ end
 function Part:updatePosition(newPosition)
 	--print("updating pos of "..self.name)
 	self.position = newPosition
+	local handleRot = self:getHandleRotation()
 	for i, handlePos in pairs(self:getHandlePositions_Abs()) do
 		if self.connected[i] then
+			if handleRot[i] then
+				self.connected[i].rotation = handleRot[i]
+			end
 			self.connected[i]:updatePosition(handlePos)
 		end
 	end
@@ -68,24 +87,49 @@ end
 Part_Body = Class{__includes=Part, name="Part_Body"}
 
 function Part_Body:getHandlePositions_Rel()
-	res = {}
-	for i=1,3 do
+	local res = {}
+	for i=0,2 do
 		pos = vector(100, 0):rotated(2.0 * math.pi / 3.0 * i + love.timer.getTime()*0.1)
+		--pos = vector(100, 0):rotated(2.0 * math.pi / 3.0 * i)
 		table.insert(res, pos)
 	end
-	return {}
+	return res
+end
+
+function Part_Body:getHandleRotation()
+	local res = {}
+	for i=0,2 do
+		table.insert(res, 4.0 * math.pi / 3.0 * i + love.timer.getTime()*0.1)
+	end
+	return res
 end
 
 function Part_Body:drawThis()
-	love.graphics.setColor( 255, 255, 255, 255 )
-	love.graphics.circle("line", self.position.x, self.position.y, 100, 5)
+	verts = {}
+	for i=0,2 do
+		pos = vector(100, 0):rotated(2.0 * math.pi / 3.0 * i + love.timer.getTime()*0.1) + self.position
+		table.insert(verts, pos.x)
+		table.insert(verts, pos.y)
+	end
+	love.graphics.setColor( 0, 0, 0 )
+	love.graphics.polygon("fill", verts)
+	love.graphics.setColor( 255, 255, 255)
+	love.graphics.polygon("line", verts)
 end
 
 Part_Eye = Class{__includes=Part, name="Part_Eye"}
 
 function Part_Eye:drawThis()
-	love.graphics.setColor( 0, 255, 0, 255 )
-	love.graphics.circle("fill", self.position.x, self.position.y, 50, 5)
+	verts = {}
+	for i=0,3 do
+		pos = vector(30, 0):rotated(2.0 * math.pi / 4.0 * i + self.rotation) + self.position
+		table.insert(verts, pos.x)
+		table.insert(verts, pos.y)
+	end
+	love.graphics.setColor( 0, 0, 0 )
+	love.graphics.polygon("fill", verts)
+	love.graphics.setColor( 255, 255, 255)
+	love.graphics.polygon("line", verts)
 end
 
 
@@ -96,13 +140,14 @@ function creatureCreator:enter()
 	cam:zoomTo(2)
 	body = Part_Body()
 	eye = Part_Eye()
-	body:connect(eye, 2)
+	eye2 = Part_Eye()
+	body:connect(eye, 1)
+	body:connect(eye2, 2)
 	body:updatePosition(vector(0, 0))
 	cam:lookAt(body.position:unpack())
 end
 
 function creatureCreator:draw()
-	--love.graphics.rectangle("fill",10,10,500,500)
 	cam:attach()
 	body:draw()
 	cam:detach()
