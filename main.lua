@@ -8,6 +8,17 @@ local pl = require('pl.import_into')()
 local C= require 'pl.comprehension' . new()
 
 
+function genPoly(posMod, corners, size, rotation)
+	local verts = {}
+	for i=0, corners-1 do
+		pos = vector(size, 0):rotated(2.0 * math.pi / corners * i + rotation) + posMod
+		table.insert(verts, pos.x)
+		table.insert(verts, pos.y)
+	end
+	return verts
+end
+
+
 
 Part = Class{
 	init = function(self)
@@ -58,8 +69,11 @@ end
 function Part:drawHandles()
 	for i, handle in pairs(self:getHandlePositions_Abs()) do
 		if not self.connected[i] then
+			verts = genPoly(handle + self.position, 5, 10, love.timer.getTime()*0.1 + self.rotation)
+			love.graphics.setColor( 0, 0, 0 )
+			love.graphics.polygon("fill", verts)
 			love.graphics.setColor( 0, 255, 255)
-			love.graphics.circle("line", handle.x, handle.y, 20, 5)
+			love.graphics.polygon("line", verts)
 		end
 	end
 end
@@ -99,18 +113,13 @@ end
 function Part_Body:getHandleRotation()
 	local res = {}
 	for i=0,2 do
-		table.insert(res, 4.0 * math.pi / 3.0 * i + love.timer.getTime()*0.1)
+		table.insert(res, 4.0 * math.pi / 3.0 * i + self.rotation)
 	end
 	return res
 end
 
 function Part_Body:drawThis()
-	verts = {}
-	for i=0,2 do
-		pos = vector(100, 0):rotated(2.0 * math.pi / 3.0 * i + love.timer.getTime()*0.1) + self.position
-		table.insert(verts, pos.x)
-		table.insert(verts, pos.y)
-	end
+	verts  = genPoly(self.position, 3, 100, self.rotation)
 	love.graphics.setColor( 0, 0, 0 )
 	love.graphics.polygon("fill", verts)
 	love.graphics.setColor( 255, 255, 255)
@@ -120,12 +129,7 @@ end
 Part_Eye = Class{__includes=Part, name="Part_Eye"}
 
 function Part_Eye:drawThis()
-	verts = {}
-	for i=0,3 do
-		pos = vector(30, 0):rotated(2.0 * math.pi / 4.0 * i + self.rotation) + self.position
-		table.insert(verts, pos.x)
-		table.insert(verts, pos.y)
-	end
+	verts = genPoly(self.position, 4, 30, self.rotation)
 	love.graphics.setColor( 0, 0, 0 )
 	love.graphics.polygon("fill", verts)
 	love.graphics.setColor( 255, 255, 255)
@@ -139,10 +143,12 @@ function creatureCreator:enter()
 	cam = Camera(0, 0)
 	cam:zoomTo(2)
 	body = Part_Body()
+	body2 = Part_Body()
 	eye = Part_Eye()
 	eye2 = Part_Eye()
 	body:connect(eye, 1)
 	body:connect(eye2, 2)
+	body:connect(body2, 3)
 	body:updatePosition(vector(0, 0))
 	cam:lookAt(body.position:unpack())
 end
@@ -156,6 +162,7 @@ end
 function creatureCreator:update(dt)
 	--cam:zoom(1 + dt*0.1)
 	body:updatePosition(vector(0, 0))
+	body.rotation = love.timer.getTime()*0.1
 end
 
 
