@@ -69,7 +69,7 @@ end
 function Part:drawHandles()
 	for i, handle in pairs(self:getHandlePositions_Abs()) do
 		if not self.connected[i] then
-			verts = genPoly(handle + self.position, 5, 10, love.timer.getTime()*0.1 + self.rotation)
+			verts = genPoly(handle + self.position, 5, 10 * self.size, love.timer.getTime()*0.1 + self.rotation)
 			love.graphics.setColor( 0, 0, 0 )
 			love.graphics.polygon("fill", verts)
 			love.graphics.setColor( 0, 255, 255)
@@ -80,6 +80,7 @@ end
 
 function Part:connect(other, handle)
 	self.connected[handle] = other
+	other.size = self.size * 0.8
 end
 
 function Part:updatePosition(newPosition)
@@ -103,7 +104,7 @@ Part_Body = Class{__includes=Part, name="Part_Body"}
 function Part_Body:getHandlePositions_Rel()
 	local res = {}
 	for i=0,2 do
-		pos = vector(100, 0):rotated(2.0 * math.pi / 3.0 * i + love.timer.getTime()*0.1)
+		pos = vector(100 * self.size, 0):rotated(2.0 * math.pi / 3.0 * i + self.rotation)
 		--pos = vector(100, 0):rotated(2.0 * math.pi / 3.0 * i)
 		table.insert(res, pos)
 	end
@@ -119,7 +120,7 @@ function Part_Body:getHandleRotation()
 end
 
 function Part_Body:drawThis()
-	verts  = genPoly(self.position, 3, 100, self.rotation)
+	verts  = genPoly(self.position, 3, 100*self.size, self.rotation)
 	love.graphics.setColor( 0, 0, 0 )
 	love.graphics.polygon("fill", verts)
 	love.graphics.setColor( 255, 255, 255)
@@ -129,7 +130,7 @@ end
 Part_Eye = Class{__includes=Part, name="Part_Eye"}
 
 function Part_Eye:drawThis()
-	verts = genPoly(self.position, 4, 30, self.rotation)
+	verts = genPoly(self.position, 4, 30*self.size, self.rotation)
 	love.graphics.setColor( 0, 0, 0 )
 	love.graphics.polygon("fill", verts)
 	love.graphics.setColor( 255, 255, 255)
@@ -147,8 +148,8 @@ function creatureCreator:enter()
 	eye = Part_Eye()
 	eye2 = Part_Eye()
 	body:connect(eye, 1)
-	body:connect(eye2, 2)
 	body:connect(body2, 3)
+	body2:connect(eye2, 2)
 	body:updatePosition(vector(0, 0))
 	cam:lookAt(body.position:unpack())
 end
