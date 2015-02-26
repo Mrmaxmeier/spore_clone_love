@@ -19,6 +19,30 @@ function genPoly(posMod, corners, size, rotation)
 end
 
 
+Creature = Class{
+	init = function(self)
+		self.body = nil
+		self.stats = {}
+		self.name = "Unnamed Creature"
+		self.position = vector(0, 0)
+		self.velocity = vector(0, 0)
+	end
+}
+
+function Creature:updateStats()
+	if self.body then
+		self.stats = self.body:getAllStats()
+	end
+end
+
+function Creature:update(dt)
+end
+
+function Creature:draw()
+	if self.body then body:draw() end
+end
+
+
 
 Part = Class{
 	init = function(self)
@@ -100,6 +124,26 @@ function Part:updatePosition(newPosition)
 	end
 end
 
+function Part:stats()
+	return {partnum = 1}
+end
+
+function Part:getAllStats()
+	local stats = self:stats()
+	for i, part in ipairs(self.connected) do
+		if part then
+			for k, v in pairs(part:getAllStats()) do
+				if stats[k] ~= nil then
+					stats[k] = stats[k] + v
+				else
+					stats[k] = v
+				end
+			end
+		end
+	end
+	return stats
+end
+
 
 
 Part_Body = Class{__includes=Part, name="Part_Body"}
@@ -139,13 +183,20 @@ function Part_Eye:drawThis()
 	love.graphics.polygon("line", verts)
 end
 
+function Part_Eye:stats()
+	return {partnum = 1, vision = 1}
+end
+
+
 
 creatureCreator = {}
 
 function creatureCreator:enter()
 	cam = Camera(0, 0)
 	cam:zoomTo(2)
+	creature = Creature()
 	body = Part_Body()
+	creature.body = body
 	body2 = Part_Body()
 	body3 = Part_Body()
 	eye = Part_Eye()
@@ -157,16 +208,20 @@ function creatureCreator:enter()
 	body:updatePosition(vector(0, 0))
 	cam:lookAt(body.position:unpack())
 
+
+	print("Stats:")
+	pl.pretty.dump(body:getAllStats())
+
 	love.graphics.setNewFont(30)
 end
 
 function creatureCreator:draw()
 	cam:attach()
-	body:draw()
+	creature:draw()
 	cam:detach()
 
 	--HUD
-	love.graphics.print( "#Sw@g®", 0, 0)
+	love.graphics.print( "Editing: "..creature.name, 0, 0)
 end
 
 function creatureCreator:update(dt)
