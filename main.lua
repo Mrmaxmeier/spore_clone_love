@@ -69,7 +69,10 @@ end
 function Part:drawHandles()
 	for i, handle in pairs(self:getHandlePositions_Abs()) do
 		if not self.connected[i] then
-			verts = genPoly(handle, 5, 10 * self.size, love.timer.getTime()*0.1 + self.rotation)
+			local modStrength = 1.5;
+			local sMod = math.sin(love.timer.getTime()*modStrength*2.0)*0.1
+			local rMod = love.timer.getTime()*modStrength
+			local verts = genPoly(handle, 5, 10 * (self.size + sMod) , self.rotation + rMod)
 			love.graphics.setColor( 0, 0, 0 )
 			love.graphics.polygon("fill", verts)
 			love.graphics.setColor( 0, 255, 255)
@@ -144,19 +147,26 @@ function creatureCreator:enter()
 	cam:zoomTo(2)
 	body = Part_Body()
 	body2 = Part_Body()
+	body3 = Part_Body()
 	eye = Part_Eye()
 	eye2 = Part_Eye()
 	body:connect(eye, 1)
 	body:connect(body2, 3)
 	body2:connect(eye2, 2)
+	body2:connect(body3, 1)
 	body:updatePosition(vector(0, 0))
 	cam:lookAt(body.position:unpack())
+
+	love.graphics.setNewFont(30)
 end
 
 function creatureCreator:draw()
 	cam:attach()
 	body:draw()
 	cam:detach()
+
+	--HUD
+	love.graphics.print( "#Sw@g®", 0, 0)
 end
 
 function creatureCreator:update(dt)
@@ -165,6 +175,15 @@ function creatureCreator:update(dt)
 	body.rotation = love.timer.getTime()*0.1
 end
 
+function creatureCreator:mousepressed( x, y, mb )
+   if mb == "wu" then
+      cam:zoom(1.0 + 0.2)
+   end
+
+   if mb == "wd" then
+      cam:zoom(1.0 - 0.2)
+   end
+end
 
 
 
@@ -172,7 +191,7 @@ function love.load()
 	print("\aSWAG")
 
 	-- only register draw, update and quit
-	Gamestate.registerEvents{'draw', 'update', 'quit'}
+	Gamestate.registerEvents{'draw', 'update', 'quit', 'mousepressed'}
 	Gamestate.switch(creatureCreator)
 
 end
