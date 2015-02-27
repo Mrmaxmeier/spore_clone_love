@@ -36,6 +36,9 @@ function Creature:updateStats()
 end
 
 function Creature:update(dt)
+	if self.body then
+		self.body:updateAll(dt)
+	end
 end
 
 function Creature:draw()
@@ -46,7 +49,7 @@ end
 
 Part = Class{
 	init = function(self)
-		self.data = "lel"
+		self.data = {myData="lel"}
 		self.position = vector(0, 0)
 		self.connected = {}
 		self.parent = nil
@@ -65,6 +68,10 @@ function Part:draw()
 		connected:draw()
 	end
 	
+end
+
+function Part:update(dt)
+	-- to be overwritten
 end
 
 function Part:drawThis()
@@ -145,6 +152,13 @@ function Part:getAllStats()
 end
 
 
+function Part:updateAll(dt)
+	self:update(dt)
+	for i, part in ipairs(self.connected) do
+		if part then part:updateAll(dt) end
+	end
+end
+
 
 Part_Body = Class{__includes=Part, name="Part_Body"}
 
@@ -206,6 +220,32 @@ function Part_Eye:stats()
 	return {partnum = 1, vision = 1}
 end
 
+Part_Fin = Class{__includes=Part, name="Part_Fin", data={phase=0}}
+
+function Part_Fin:update(dt)
+	self.data.phase = self.data.phase + dt * 5.0
+end
+
+function Part_Fin:drawThis()
+	if not self.data.phase then self.data.phase = 0 end
+
+	local dir = vector(3, 0):rotated(self.rotation)
+
+	for i=0,10 do
+		local pos = self.position + dir*i + vector(0, math.sin(self.data.phase)):rotated(self.rotation)
+		verts = genPoly(pos, 4, 35*self.size - i*self.size, self.rotation)
+		love.graphics.setColor( 255, 255, 255 )
+		love.graphics.polygon("fill", verts)
+		love.graphics.setColor( 0, 0, 0)
+		love.graphics.polygon("line", verts)
+	end
+
+end
+
+
+function Part_Fin:stats()
+	return {partnum = 1, speed = 1}
+end
 
 
 creatureCreator = {}
@@ -218,9 +258,9 @@ function creatureCreator:enter()
 	creature.body = body
 	body2 = Part_Body()
 	body3 = Part_Body()
-	eye = Part_Eye()
+	fin = Part_Fin()
 	eye2 = Part_Eye()
-	body:connect(eye, 1)
+	body:connect(fin, 1)
 	body:connect(body2, 3)
 	body2:connect(eye2, 2)
 	body2:connect(body3, 1)
@@ -254,6 +294,7 @@ end
 
 function creatureCreator:update(dt)
 	--cam:zoom(1 + dt*0.1)
+	creature:update(dt)
 	body:updatePosition(vector(0, 0))
 	body.rotation = love.timer.getTime()*0.1
 end
