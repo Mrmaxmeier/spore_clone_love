@@ -223,17 +223,20 @@ end
 Part_Fin = Class{__includes=Part, name="Part_Fin", data={phase=0}}
 
 function Part_Fin:update(dt)
+	if not self.data.phase then self.data.phase = 0 end
 	self.data.phase = self.data.phase + dt * 5.0
 end
 
 function Part_Fin:drawThis()
 	if not self.data.phase then self.data.phase = 0 end
 
-	local dir = vector(3, 0):rotated(self.rotation)
+	local dir = vector(40, 0):rotated(self.rotation)
 
-	for i=0,10 do
-		local pos = self.position + dir*i + vector(0, math.sin(self.data.phase)):rotated(self.rotation)
-		verts = genPoly(pos, 4, 35*self.size - i*self.size, self.rotation)
+	for i=0, 4 do
+		local speed = 1.0 * 2.0
+		local pos = self.position + dir * i/4.0
+		pos = pos + vector(0, math.sin(self.data.phase * speed + i) * i):rotated(self.rotation)
+		verts = genPoly(pos, 4, 35*self.size - i*self.size * 5.0, self.rotation + math.pi*0.25)
 		love.graphics.setColor( 255, 255, 255 )
 		love.graphics.polygon("fill", verts)
 		love.graphics.setColor( 0, 0, 0)
@@ -261,9 +264,13 @@ function creatureCreator:enter()
 	fin = Part_Fin()
 	eye2 = Part_Eye()
 	body:connect(fin, 1)
-	body:connect(body2, 3)
+	body:connect(body2, 2)
 	body2:connect(eye2, 2)
 	body2:connect(body3, 1)
+
+
+	creature:updateStats()
+
 	body:updatePosition(vector(0, 0))
 	cam:lookAt(body.position:unpack())
 
@@ -273,7 +280,8 @@ function creatureCreator:enter()
 
 	love.graphics.setNewFont(30)
 
-	--image = love.graphics.newImage( "toller_hintergrund.jpg" )
+	iconImage = love.graphics.newImage( "icon.png" )
+	print("SetIcon:", love.window.setIcon(iconImage:getData()))
 	--print(image:getWidth())
 end
 
@@ -288,8 +296,9 @@ function creatureCreator:draw()
 	cam:detach()
 
 	--HUD
-	--love.graphics.setColor(255, 255, 255)
+	love.graphics.setColor(255, 255, 255)
 	--love.graphics.print( "Editing: "..creature.name, 0, 0)
+	--love.graphics.print( pl.pretty.write(creature.stats), 0, 0)
 end
 
 function creatureCreator:update(dt)
@@ -300,13 +309,8 @@ function creatureCreator:update(dt)
 end
 
 function creatureCreator:mousepressed( x, y, mb )
-   if mb == "wu" then
-      cam:zoom(1.0 + 0.2)
-   end
-
-   if mb == "wd" then
-      cam:zoom(1.0 - 0.2)
-   end
+	if mb == "wu" then cam:zoom(1.0 + 0.2) end
+	if mb == "wd" then cam:zoom(1.0 - 0.2) end
 end
 
 
