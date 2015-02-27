@@ -112,10 +112,16 @@ function Part:drawHandles()
 	end
 end
 
-function Part:connect(other, handle)
+function Part:attach(other, handle)
 	self.connected[handle] = other
 	other.size = self.size * 0.6
+	self.handle = handle
 end
+
+function Part:detach() 
+	self.parent.connected[self.handle] = nil
+end
+
 
 function Part:updatePosition(newPosition)
 	--print("updating pos of "..self.name)
@@ -250,7 +256,7 @@ function Part_Fin:stats()
 	return {partnum = 1, speed = 1}
 end
 
-
+ALL_PARTS = {Part_Body, Part_Eye, Part_Fin}
 creatureCreator = {}
 
 function creatureCreator:enter()
@@ -263,10 +269,10 @@ function creatureCreator:enter()
 	body3 = Part_Body()
 	fin = Part_Fin()
 	eye2 = Part_Eye()
-	body:connect(fin, 1)
-	body:connect(body2, 2)
-	body2:connect(eye2, 2)
-	body2:connect(body3, 1)
+	body:attach(fin, 1)
+	body:attach(body2, 2)
+	body2:attach(eye2, 2)
+	body2:attach(body3, 1)
 
 
 	creature:updateStats()
@@ -283,9 +289,20 @@ function creatureCreator:enter()
 	iconImage = love.graphics.newImage( "icon.png" )
 	print("SetIcon:", love.window.setIcon(iconImage:getData()))
 	--print(image:getWidth())
+
+
+	sidebar = {}
+	for k, v in pairs(ALL_PARTS) do
+		sidebar[k] = v()
+	end
 end
 
 function creatureCreator:draw()
+	sx = love.graphics.getWidth()
+	sy = love.graphics.getHeight()
+
+	--body:updatePosition(vector(sx*0.05, 0))
+	
 	--Swag
 	--love.graphics.setColor(255, 255, 255)
 	--love.graphics.draw(image, 0, 0, 0, 0.3, 0.3)
@@ -299,6 +316,13 @@ function creatureCreator:draw()
 	love.graphics.setColor(255, 255, 255)
 	--love.graphics.print( "Editing: "..creature.name, 0, 0)
 	--love.graphics.print( pl.pretty.write(creature.stats), 0, 0)
+
+	love.graphics.setColor(222, 255, 222, 127)
+	love.graphics.rectangle("fill", 0, 0, sx/5, sy)
+	for k,v in pairs(sidebar) do
+		v.position = vector(sx/10, k*sy/(#sidebar+1))
+		v:draw()
+	end
 end
 
 function creatureCreator:update(dt)
@@ -306,6 +330,10 @@ function creatureCreator:update(dt)
 	creature:update(dt)
 	body:updatePosition(vector(0, 0))
 	body.rotation = love.timer.getTime()*0.1
+
+	for k,v in pairs(sidebar) do
+		v:update(dt)
+	end
 end
 
 function creatureCreator:mousepressed( x, y, mb )
