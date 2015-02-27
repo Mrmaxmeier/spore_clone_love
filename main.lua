@@ -176,10 +176,29 @@ end
 Part_Eye = Class{__includes=Part, name="Part_Eye"}
 
 function Part_Eye:drawThis()
-	verts = genPoly(self.position, 4, 30*self.size, self.rotation)
+	verts = genPoly(self.position, 4, 35*self.size, self.rotation)
+	love.graphics.setColor( 255, 255, 255 )
+	love.graphics.polygon("fill", verts)
+	love.graphics.setColor( 0, 0, 0)
+	love.graphics.polygon("line", verts)
+
+	local diff = (vector(cam:mousepos()) - self.position);
+	local diff2 = diff:clone()
+	if diff:len() > 8.0*self.size then diff = diff:normalized() * 8.0*self.size end
+
+	verts = genPoly(self.position + diff, 4, 20*self.size, self.rotation)
+	love.graphics.setColor( 0, 0, 255 )
+	love.graphics.polygon("fill", verts)
+	love.graphics.setColor( 0, 0, 255)
+	love.graphics.polygon("line", verts)
+
+
+
+	if diff2:len() > 12.0*self.size then diff2 = diff2:normalized() * 12.0*self.size end
+	verts = genPoly(self.position + diff2, 4, 10*self.size, self.rotation)
 	love.graphics.setColor( 0, 0, 0 )
 	love.graphics.polygon("fill", verts)
-	love.graphics.setColor( 255, 255, 255)
+	love.graphics.setColor( 0, 0, 0)
 	love.graphics.polygon("line", verts)
 end
 
@@ -213,15 +232,24 @@ function creatureCreator:enter()
 	pl.pretty.dump(body:getAllStats())
 
 	love.graphics.setNewFont(30)
+
+	--image = love.graphics.newImage( "toller_hintergrund.jpg" )
+	--print(image:getWidth())
 end
 
 function creatureCreator:draw()
+	--Swag
+	--love.graphics.setColor(255, 255, 255)
+	--love.graphics.draw(image, 0, 0, 0, 0.3, 0.3)
+	love.graphics.setBackgroundColor( 0, 0, 205 )
+
 	cam:attach()
 	creature:draw()
 	cam:detach()
 
 	--HUD
-	love.graphics.print( "Editing: "..creature.name, 0, 0)
+	--love.graphics.setColor(255, 255, 255)
+	--love.graphics.print( "Editing: "..creature.name, 0, 0)
 end
 
 function creatureCreator:update(dt)
