@@ -257,6 +257,7 @@ function Part_Fin:stats()
 end
 
 ALL_PARTS = {Part_Body, Part_Eye, Part_Fin}
+
 creatureCreator = {}
 
 function creatureCreator:enter()
@@ -321,6 +322,7 @@ function creatureCreator:draw()
 	love.graphics.rectangle("fill", 0, 0, sx/5, sy)
 	for k,v in pairs(sidebar) do
 		v.position = vector(sx/10, k*sy/(#sidebar+1))
+		v.size = 0.1 + sx/800 * 0.5
 		v:draw()
 	end
 end
@@ -329,7 +331,9 @@ function creatureCreator:update(dt)
 	--cam:zoom(1 + dt*0.1)
 	creature:update(dt)
 	body:updatePosition(vector(0, 0))
-	body.rotation = love.timer.getTime()*0.1
+	--body.rotation = love.timer.getTime()*0.1
+	if love.keyboard.isDown("left")  then body.rotation = body.rotation - dt end
+	if love.keyboard.isDown("right") then body.rotation = body.rotation + dt end
 
 	for k,v in pairs(sidebar) do
 		v:update(dt)
