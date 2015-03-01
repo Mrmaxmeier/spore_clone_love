@@ -393,7 +393,22 @@ function creatureCreator:update(dt)
 	if love.keyboard.isDown("left")  then body.rotation = body.rotation - dt end
 	if love.keyboard.isDown("right") then body.rotation = body.rotation + dt end
 
-	for k,v in pairs(sidebar) do
+	for i, v in ipairs(sidebar) do
+		v.isHighlighted = false
+	end
+
+	local absMPos = vector(love.mouse.getPosition())
+	for i, v in ipairs(sidebar) do
+		if absMPos.x < love.graphics.getWidth()/5 then
+			if absMPos.y < (i) * love.graphics.getHeight()/(#sidebar) then
+				if absMPos.y > (i-1) * love.graphics.getHeight()/(#sidebar) then
+					v.isHighlighted = true
+				end
+			end
+		end
+	end
+
+	for k, v in pairs(sidebar) do
 		v:update(dt)
 	end
 end
