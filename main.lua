@@ -26,6 +26,7 @@ Creature = Class{
 		self.name = "Unnamed Creature"
 		self.position = vector(0, 0)
 		self.velocity = vector(0, 0)
+		self.partList = {}
 	end
 }
 
@@ -39,10 +40,33 @@ function Creature:update(dt)
 	if self.body then
 		self.body:updateAll(dt)
 	end
+
+
+	for i, v in ipairs(self.partList) do
+		v.isHighlighted = false
+	end
+
+	local mPos = vector(cam:mousepos())
+	for i, v in ipairs(self.partList) do
+		if v:insideHitbox(mPos) then
+			v.isHighlighted = true
+			break
+		end
+	end
 end
 
 function Creature:draw()
 	if self.body then body:draw() end
+end
+
+function Creature:partsChanged()
+	self:updateStats()
+	local reversedParts = self.body:getAllParts()
+	self.partList = {}
+    local itemCount = #reversedParts
+    for k, v in ipairs(reversedParts) do
+        self.partList[itemCount + 1 - k] = v
+    end
 end
 
 
@@ -55,9 +79,17 @@ Part = Class{
 		self.parent = nil
 		self.size = 1
 		self.rotation = 0
+		self.isHighlighted = false
 	end,
 	name="Part"
 }
+
+function Part:getCol(r, g, b)
+	if self.isHighlighted then
+		return 255 - r, 255 - g, 255 - b
+	end
+	return r, g, b
+end
 
 
 function Part:draw()
@@ -158,11 +190,34 @@ function Part:getAllStats()
 end
 
 
+function Part:getAllParts()
+	local parts = {self}
+	for i, part in ipairs(self.connected) do
+		if part then
+			parts[#parts+1] = part
+		end
+	end
+
+	for i, part in ipairs(self.connected) do
+		if part then
+			for k, v in pairs(part:getAllParts()) do
+				parts[#parts+1] = v
+			end
+		end
+	end
+	return parts
+end
+
+
 function Part:updateAll(dt)
 	self:update(dt)
 	for i, part in ipairs(self.connected) do
 		if part then part:updateAll(dt) end
 	end
+end
+
+function Part:insideHitbox(point)
+	return point:dist(self.position) < self.size * 100
 end
 
 
@@ -187,9 +242,9 @@ end
 
 function Part_Body:drawThis()
 	verts  = genPoly(self.position, 3, 100*self.size, self.rotation)
-	love.graphics.setColor( 0, 0, 0 )
+	love.graphics.setColor( self:getCol(0, 0, 0) )
 	love.graphics.polygon("fill", verts)
-	love.graphics.setColor( 255, 255, 255)
+	love.graphics.setColor( self:getCol(255, 255, 255) )
 	love.graphics.polygon("line", verts)
 end
 
@@ -197,9 +252,9 @@ Part_Eye = Class{__includes=Part, name="Part_Eye"}
 
 function Part_Eye:drawThis()
 	verts = genPoly(self.position, 4, 35*self.size, self.rotation)
-	love.graphics.setColor( 255, 255, 255 )
+	love.graphics.setColor( self:getCol(255, 255, 255) )
 	love.graphics.polygon("fill", verts)
-	love.graphics.setColor( 0, 0, 0)
+	love.graphics.setColor( self:getCol(0, 0, 0) )
 	love.graphics.polygon("line", verts)
 
 	local diff = (vector(cam:mousepos()) - self.position);
@@ -207,18 +262,18 @@ function Part_Eye:drawThis()
 	if diff:len() > 8.0*self.size then diff = diff:normalized() * 8.0*self.size end
 
 	verts = genPoly(self.position + diff, 4, 20*self.size, self.rotation)
-	love.graphics.setColor( 0, 0, 255 )
+	love.graphics.setColor( self:getCol(0, 0, 255) )
 	love.graphics.polygon("fill", verts)
-	love.graphics.setColor( 0, 0, 255)
+	love.graphics.setColor( self:getCol(0, 0, 255) )
 	love.graphics.polygon("line", verts)
 
 
 
 	if diff2:len() > 12.0*self.size then diff2 = diff2:normalized() * 12.0*self.size end
 	verts = genPoly(self.position + diff2, 4, 10*self.size, self.rotation)
-	love.graphics.setColor( 0, 0, 0 )
+	love.graphics.setColor( self:getCol(0, 0, 0) )
 	love.graphics.polygon("fill", verts)
-	love.graphics.setColor( 0, 0, 0)
+	love.graphics.setColor( self:getCol(0, 0, 0) )
 	love.graphics.polygon("line", verts)
 end
 
@@ -243,9 +298,10 @@ function Part_Fin:drawThis()
 		local pos = self.position + dir * i/4.0
 		pos = pos + vector(0, math.sin(self.data.phase * speed + i) * i):rotated(self.rotation)
 		verts = genPoly(pos, 4, 35*self.size - i*self.size * 5.0, self.rotation + math.pi*0.25)
-		love.graphics.setColor( 255, 255, 255 )
+		local cMod = (255/2)/4*i
+		love.graphics.setColor( self:getCol(255-cMod, 255-cMod, 255-cMod) )
 		love.graphics.polygon("fill", verts)
-		love.graphics.setColor( 0, 0, 0)
+		love.graphics.setColor( self:getCol(0, 0, 0) )
 		love.graphics.polygon("line", verts)
 	end
 
@@ -276,12 +332,14 @@ function creatureCreator:enter()
 	body2:attach(body3, 1)
 
 
-	creature:updateStats()
+	creature:partsChanged()
 
 	body:updatePosition(vector(0, 0))
 	cam:lookAt(body.position:unpack())
 
 
+	print("Parts")
+	pl.pretty.dump(body:getAllParts())
 	print("Stats:")
 	pl.pretty.dump(body:getAllStats())
 
