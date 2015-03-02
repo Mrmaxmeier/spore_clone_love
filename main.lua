@@ -509,6 +509,12 @@ end
 
 function creatureCreator:mousereleased(x, y, mb)
 	if mb == "l" then
+		if mouseHandle ~= nil then
+			p, hI, hPos = creature:selectedHinge()
+			if p ~= nil then
+				p:attach(mouseHandle, hI)
+			end
+		end
 		mouseHandle = nil
 	end
 end
