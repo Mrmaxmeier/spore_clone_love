@@ -164,11 +164,20 @@ function Part:attach(other, handle)
 	self.connected[handle] = other
 	other.size = self.size * 0.6
 	other.parent = self
-	self.handle = handle
+	other.handle = handle
 end
 
-function Part:detach() 
-	self.parent.connected[self.handle] = nil
+function Part:detach()
+	if self.parent ~= nil then
+		if self.handle ~= nil then
+			self.parent.connected[self.handle] = nil
+			print("detached")
+		else
+			print("detach no handle")
+		end
+	else
+		print("detach no parent")
+	end
 end
 
 
@@ -350,6 +359,9 @@ function creatureCreator:enter()
 	body:attach(body2, 2)
 	body2:attach(body3, 1)
 	body3:attach(eye2, 1)
+	
+
+	--eye2:detach()
 
 
 	creature:partsChanged()
@@ -358,8 +370,8 @@ function creatureCreator:enter()
 	cam:lookAt(body.position:unpack())
 
 
-	print("Parts")
-	pl.pretty.dump(body:getAllParts())
+	--print("Parts")
+	--pl.pretty.dump(body:getAllParts())
 	print("Stats:")
 	pl.pretty.dump(body:getAllStats())
 
@@ -454,11 +466,16 @@ function creatureCreator:mousepressed( x, y, mb )
 			if res ~= nil then
 				print("selectedPart")
 				if res.parent ~= nil then
-					pl.pretty.dump(res)
+					--pl.pretty.dump(res)
 					--mouseHandle = Class.clone(res)
 					mouseHandle = res
+					if love.keyboard.isDown("a") then
+						print("copy")
+					else
+						res:detach()
+					end
 					--pl.pretty.dump(mouseHandle)
-					print(serpent.dump(mouseHandle))
+					--print(serpent.dump(mouseHandle))
 				end
 			end
 		end
