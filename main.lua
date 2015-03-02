@@ -74,12 +74,12 @@ function Creature:selectedHinge()
 	local mPos = vector(cam:mousepos())
 	for i, part in ipairs(self.partList) do
 		for hI, hPos in ipairs(part:getHandlePositions_Abs()) do
-			if mPos:dist(hPos) < 100*part.size then
-				return part, hI --part, hingeIndex
+			if mPos:dist(hPos) < 20*part.size then
+				return part, hI, hPos --part, hingeIndex
 			end
 		end
 	end
-	return nil, nil
+	return nil, nil, nil
 end
 
 
@@ -498,7 +498,7 @@ end
 function creatureCreator:mousemoved(x, y, dx, dy)
 	if mouseHandle ~= nil then
 		--dragging a part over handles
-		p, hPos = creature:selectedHinge()
+		p, hI, hPos = creature:selectedHinge()
 		if p ~= nil then
 			mouseHandle:updatePosition(hPos)
 		else
