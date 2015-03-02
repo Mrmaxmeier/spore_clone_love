@@ -3,9 +3,13 @@ vector = require "hump.vector"
 Camera = require "hump.camera"
 Class = require "hump.class"
 
+
+local serpent = require "serpent"
+
 package.path = package.path .. ";penlight/lua/?.lua"
 local pl = require('pl.import_into')()
 local C= require 'pl.comprehension' . new()
+
 
 
 function genPoly(posMod, corners, size, rotation)
@@ -55,6 +59,16 @@ function Creature:update(dt)
 	end
 end
 
+function Creature:selectedPart()
+	local mPos = vector(cam:mousepos())
+	for i, v in ipairs(self.partList) do
+		if v:insideHitbox(mPos) then
+			return v
+		end
+	end
+	return nil;
+end
+
 function Creature:draw()
 	if self.body then body:draw() end
 end
@@ -97,7 +111,9 @@ function Part:draw()
 	if true then self:drawHandles() end
 
 	for i, connected in pairs(self.connected) do
-		connected:draw()
+		if connected ~= nil then
+			connected:draw()
+		end
 	end
 	
 end
@@ -147,6 +163,7 @@ end
 function Part:attach(other, handle)
 	self.connected[handle] = other
 	other.size = self.size * 0.6
+	other.parent = self
 	self.handle = handle
 end
 
@@ -225,8 +242,8 @@ Part_Body = Class{__includes=Part, name="Part_Body"}
 
 function Part_Body:getHandlePositions_Rel()
 	local res = {}
-	for i=0,2 do
-		pos = vector(100 * self.size, 0):rotated(2.0 * math.pi / 3.0 * i + self.rotation)
+	for i=0, 2 do
+		pos = vector(100 * self.size, 0):rotated(2.0 * math.pi / 3.0 * (3-i) + self.rotation)
 		table.insert(res, pos)
 	end
 	return res
@@ -325,11 +342,14 @@ function creatureCreator:enter()
 	body2 = Part_Body()
 	body3 = Part_Body()
 	fin = Part_Fin()
+	fin2 = Part_Fin()
+	fin3 = Part_Fin()
 	eye2 = Part_Eye()
 	body:attach(fin, 1)
+	body:attach(fin3, 3)
 	body:attach(body2, 2)
-	body2:attach(eye2, 2)
 	body2:attach(body3, 1)
+	body3:attach(eye2, 1)
 
 
 	creature:partsChanged()
@@ -383,6 +403,13 @@ function creatureCreator:draw()
 		v.size = 0.1 + sx/800 * 0.5
 		v:draw()
 	end
+
+	if mouseHandle ~= nil then
+		mouseHandle:updatePosition(vector(cam:mousepos()))
+		cam:attach()
+		mouseHandle:draw()
+		cam:detach()
+	end
 end
 
 function creatureCreator:update(dt)
@@ -416,7 +443,35 @@ end
 function creatureCreator:mousepressed( x, y, mb )
 	if mb == "wu" then cam:zoom(1.0 + 0.2) end
 	if mb == "wd" then cam:zoom(1.0 - 0.2) end
+
+
+	if mb == "l" then
+		if mouseHandle ~= nil then
+			-- search for handles
+		else
+			-- search for parts
+			res = creature:selectedPart()
+			if res ~= nil then
+				print("selectedPart")
+				if res.parent ~= nil then
+					pl.pretty.dump(res)
+					--mouseHandle = Class.clone(res)
+					mouseHandle = res
+					--pl.pretty.dump(mouseHandle)
+					print(serpent.dump(mouseHandle))
+				end
+			end
+		end
+	end
 end
+
+function creatureCreator:mousereleased(x, y, mb)
+	if mb == "l" then
+		mouseHandle = nil
+	end
+end
+
+
 
 
 
@@ -424,7 +479,7 @@ function love.load()
 	print("\aSWAG")
 
 	-- only register draw, update and quit
-	Gamestate.registerEvents{'draw', 'update', 'quit', 'mousepressed'}
+	Gamestate.registerEvents{'draw', 'update', 'quit', 'mousepressed', 'mousereleased'}
 	Gamestate.switch(creatureCreator)
 
 end
