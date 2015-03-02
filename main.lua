@@ -260,6 +260,39 @@ function Part:insideHitbox(point)
 	return point:dist(self.position) < self.size * 100
 end
 
+function Part:ser()
+	local serTable = {connected = {}, data = {}, partType=self.name}
+	for i, v in ipairs(self.connected) do
+		serTable.connected[i] = v:ser()
+	end
+	return serTable--serpent.dump(serTable)
+end
+
+function Part:loadData( t )
+	-- body
+end
+
+function loadPart(t)
+	print("loading part")
+	print(t)
+	pl.pretty.dump(t)
+	local partTable = {Part_Eye=Part_Eye, Part_Body=Part_Body, Part_Fin=Part_Fin}
+	local part = partTable[t.partType]()
+	part:loadData(t.data)
+	for i,v in ipairs(t.connected) do
+		if v ~= nil then
+			part:attach(loadPart(v), i)
+		end
+	end
+	return part
+end
+
+function Part:clone()
+	--local ok, t = serpent.load(self:ser())
+	return loadPart(self:ser())
+end
+
+
 
 Part_Body = Class{__includes=Part, name="Part_Body"}
 
@@ -393,12 +426,10 @@ function creatureCreator:enter()
 
 	iconImage = love.graphics.newImage( "icon.png" )
 	print("SetIcon:", love.window.setIcon(iconImage:getData()))
-	--print(image:getWidth())
-
 
 	sidebar = {}
-	for k, v in pairs(ALL_PARTS) do
-		sidebar[k] = v()
+	for i, v in ipairs(ALL_PARTS) do
+		sidebar[i] = v()
 	end
 end
 
@@ -424,8 +455,8 @@ function creatureCreator:draw()
 
 	love.graphics.setColor(222, 255, 222, 127)
 	love.graphics.rectangle("fill", 0, 0, sx/5, sy)
-	for k,v in pairs(sidebar) do
-		v.position = vector(sx/10, k*sy/(#sidebar+1))
+	for i, v in ipairs(sidebar) do
+		v.position = vector(sx/10, i*sy/(#sidebar+1))
 		v.size = 0.1 + sx/800 * 0.5
 		v:draw()
 	end
@@ -449,18 +480,10 @@ function creatureCreator:update(dt)
 		v.isHighlighted = false
 	end
 
-	local absMPos = vector(love.mouse.getPosition())
-	for i, v in ipairs(sidebar) do
-		if absMPos.x < love.graphics.getWidth()/5 then
-			if absMPos.y < (i) * love.graphics.getHeight()/(#sidebar) then
-				if absMPos.y > (i-1) * love.graphics.getHeight()/(#sidebar) then
-					v.isHighlighted = true
-				end
-			end
-		end
-	end
+	res = self:sidebarSelected()
+	if res then res.isHighlighted = true end
 
-	for k, v in pairs(sidebar) do
+	for i, v in ipairs(sidebar) do
 		v:update(dt)
 	end
 end
@@ -479,16 +502,21 @@ function creatureCreator:mousepressed( x, y, mb )
 			if res ~= nil then
 				print("selectedPart")
 				if res.parent ~= nil then
-					--pl.pretty.dump(res)
-					--mouseHandle = Class.clone(res)
-					mouseHandle = res
-					if love.keyboard.isDown("a") then
-						print("copy")
+					mouseHandle = res:clone()
+					if love.keyboard.isDown("lalt") or love.keyboard.isDown("ralt") then
+						--swag
 					else
 						res:detach()
+						creature:partsChanged()
 					end
-					--pl.pretty.dump(mouseHandle)
-					--print(serpent.dump(mouseHandle))
+
+					mouseHandle:updatePosition(vector(cam:mousepos()))
+				end
+			else
+				res = creatureCreator:sidebarSelected()
+				if res ~= nil then
+					mouseHandle = res:clone()
+					mouseHandle:updatePosition(vector(cam:mousepos()))
 				end
 			end
 		end
@@ -513,9 +541,24 @@ function creatureCreator:mousereleased(x, y, mb)
 			p, hI, hPos = creature:selectedHinge()
 			if p ~= nil then
 				p:attach(mouseHandle, hI)
+				creature:partsChanged()
 			end
 		end
 		mouseHandle = nil
+	end
+end
+
+
+function creatureCreator:sidebarSelected()
+	local absMPos = vector(love.mouse.getPosition())
+	for i, v in ipairs(sidebar) do
+		if absMPos.x < love.graphics.getWidth()/5 then
+			if absMPos.y < (i) * love.graphics.getHeight()/(#sidebar) then
+				if absMPos.y > (i-1) * love.graphics.getHeight()/(#sidebar) then
+					return v
+				end
+			end
+		end
 	end
 end
 
