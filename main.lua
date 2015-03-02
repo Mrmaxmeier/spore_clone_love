@@ -69,6 +69,20 @@ function Creature:selectedPart()
 	return nil;
 end
 
+
+function Creature:selectedHinge()
+	local mPos = vector(cam:mousepos())
+	for i, part in ipairs(self.partList) do
+		for hI, hPos in ipairs(part:getHandlePositions_Abs()) do
+			if mPos:dist(hPos) < 100*part.size then
+				return part, hI --part, hingeIndex
+			end
+		end
+	end
+	return nil, nil
+end
+
+
 function Creature:draw()
 	if self.body then body:draw() end
 end
@@ -417,7 +431,6 @@ function creatureCreator:draw()
 	end
 
 	if mouseHandle ~= nil then
-		mouseHandle:updatePosition(vector(cam:mousepos()))
 		cam:attach()
 		mouseHandle:draw()
 		cam:detach()
@@ -482,6 +495,18 @@ function creatureCreator:mousepressed( x, y, mb )
 	end
 end
 
+function creatureCreator:mousemoved(x, y, dx, dy)
+	if mouseHandle ~= nil then
+		--dragging a part over handles
+		p, hPos = creature:selectedHinge()
+		if p ~= nil then
+			mouseHandle:updatePosition(hPos)
+		else
+			mouseHandle:updatePosition(vector(cam:mousepos()))
+		end
+	end
+end
+
 function creatureCreator:mousereleased(x, y, mb)
 	if mb == "l" then
 		mouseHandle = nil
@@ -496,7 +521,7 @@ function love.load()
 	print("\aSWAG")
 
 	-- only register draw, update and quit
-	Gamestate.registerEvents{'draw', 'update', 'quit', 'mousepressed', 'mousereleased'}
+	Gamestate.registerEvents{'draw', 'update', 'quit', 'mousepressed', 'mousereleased', 'mousemoved'}
 	Gamestate.switch(creatureCreator)
 
 end
