@@ -90,11 +90,14 @@ end
 function Creature:partsChanged()
 	self:updateStats()
 	local reversedParts = self.body:getAllParts()
+	table.insert(reversedParts, self.body)
 	self.partList = {}
     local itemCount = #reversedParts
     for k, v in ipairs(reversedParts) do
         self.partList[itemCount + 1 - k] = v
     end
+    print("PartList:")
+    print(#self.partList)
 end
 
 
@@ -215,7 +218,7 @@ end
 
 function Part:getAllStats()
 	local stats = self:stats()
-	for i, part in ipairs(self.connected) do
+	for partHandle, part in pairs(self.connected) do
 		if part then
 			for k, v in pairs(part:getAllStats()) do
 				if stats[k] ~= nil then
@@ -231,17 +234,18 @@ end
 
 
 function Part:getAllParts()
-	local parts = {self}
-	for i, part in ipairs(self.connected) do
+	local parts = {}
+	for k, part in pairs(self.connected) do
 		if part then
-			parts[#parts+1] = part
+			table.insert(parts, part)
+			print("name", part.name)
 		end
 	end
 
-	for i, part in ipairs(self.connected) do
+	for k1, part in pairs(self.connected) do
 		if part then
 			for k, v in pairs(part:getAllParts()) do
-				parts[#parts+1] = v
+				table.insert(parts, v)
 			end
 		end
 	end
@@ -251,7 +255,7 @@ end
 
 function Part:updateAll(dt)
 	self:update(dt)
-	for i, part in ipairs(self.connected) do
+	for k, part in pairs(self.connected) do
 		if part then part:updateAll(dt) end
 	end
 end
@@ -262,8 +266,8 @@ end
 
 function Part:ser()
 	local serTable = {connected = {}, data = {}, partType=self.name}
-	for i, v in ipairs(self.connected) do
-		serTable.connected[i] = v:ser()
+	for k, v in pairs(self.connected) do
+		serTable.connected[k] = v:ser()
 	end
 	return serTable--serpent.dump(serTable)
 end
@@ -275,13 +279,13 @@ end
 function loadPart(t)
 	print("loading part")
 	print(t)
-	pl.pretty.dump(t)
 	local partTable = {Part_Eye=Part_Eye, Part_Body=Part_Body, Part_Fin=Part_Fin}
 	local part = partTable[t.partType]()
 	part:loadData(t.data)
-	for i,v in ipairs(t.connected) do
+	for k, v in pairs(t.connected) do
 		if v ~= nil then
-			part:attach(loadPart(v), i)
+			part:attach(loadPart(v), k)
+			print("attaching", k)
 		end
 	end
 	return part
@@ -520,6 +524,12 @@ function creatureCreator:mousepressed( x, y, mb )
 				end
 			end
 		end
+	end
+
+	if mb == "r" then
+		print("\n\n\nSwag:")
+		creature:partsChanged()
+		pl.pretty.dump(creature.body:ser())
 	end
 end
 
