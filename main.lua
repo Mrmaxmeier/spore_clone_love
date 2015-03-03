@@ -5,10 +5,8 @@ Class = require "hump.class"
 
 
 local serpent = require "serpent"
-
-package.path = package.path .. ";penlight/lua/?.lua"
-local pl = require('pl.import_into')()
-local C= require 'pl.comprehension' . new()
+require 'pl'
+--local C= require 'pl.comprehension' . new()
 
 
 
@@ -467,9 +465,9 @@ function creatureCreator:enter()
 
 
 	--print("Parts")
-	--pl.pretty.dump(body:getAllParts())
+	--pretty.dump(body:getAllParts())
 	print("Stats:")
-	pl.pretty.dump(body:getAllStats())
+	pretty.dump(body:getAllStats())
 
 	love.graphics.setNewFont(30)
 
@@ -500,7 +498,7 @@ function creatureCreator:draw()
 	--HUD
 	love.graphics.setColor(255, 255, 255)
 	--love.graphics.print( "Editing: "..creature.name, 0, 0)
-	--love.graphics.print( pl.pretty.write(creature.stats), 0, 0)
+	--love.graphics.print( pretty.write(creature.stats), 0, 0)
 
 	love.graphics.setColor(222, 255, 222, 127)
 	love.graphics.rectangle("fill", 0, 0, sx/5, sy)
@@ -574,7 +572,7 @@ function creatureCreator:mousepressed( x, y, mb )
 	if mb == "r" then
 		print("\n\n\nSwag:")
 		creature:partsChanged()
-		pl.pretty.dump(creature.body:ser())
+		pretty.dump(creature.body:ser())
 	end
 end
 
