@@ -632,5 +632,5 @@ function love.update(dt)
 end
 
 function love.draw()
-	love.window.setTitle("SporeClone: "..love.timer.getFPS().." FPS")
+	love.window.setTitle("SporeClone (Kawaii edition)"..love.timer.getFPS().. "FPS")
 end
