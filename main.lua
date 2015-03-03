@@ -90,7 +90,7 @@ end
 function Creature:partsChanged()
 	self:updateStats()
 	local reversedParts = self.body:getAllParts()
-	table.insert(reversedParts, self.body)
+	table.insert(reversedParts, 1, self.body)
 	self.partList = {}
     local itemCount = #reversedParts
     for k, v in ipairs(reversedParts) do
@@ -329,7 +329,7 @@ end
 Part_Eye = Class{__includes=Part, name="Part_Eye"}
 
 function Part_Eye:drawThis()
-	verts = genPoly(self.position, 4, 35*self.size, self.rotation)
+	verts = genPoly(self.position, 4, 40*self.size, self.rotation)
 	love.graphics.setColor( self:getCol(255, 255, 255) )
 	love.graphics.polygon("fill", verts)
 	love.graphics.setColor( self:getCol(0, 0, 0) )
@@ -339,7 +339,7 @@ function Part_Eye:drawThis()
 	local diff2 = diff:clone()
 	if diff:len() > 8.0*self.size then diff = diff:normalized() * 8.0*self.size end
 
-	verts = genPoly(self.position + diff, 4, 20*self.size, self.rotation)
+	verts = genPoly(self.position + diff, 4, 25*self.size, self.rotation)
 	love.graphics.setColor( self:getCol(0, 0, 255) )
 	love.graphics.polygon("fill", verts)
 	love.graphics.setColor( self:getCol(0, 0, 255) )
@@ -348,7 +348,7 @@ function Part_Eye:drawThis()
 
 
 	if diff2:len() > 12.0*self.size then diff2 = diff2:normalized() * 12.0*self.size end
-	verts = genPoly(self.position + diff2, 4, 10*self.size, self.rotation)
+	verts = genPoly(self.position + diff2, 4, 15*self.size, self.rotation)
 	love.graphics.setColor( self:getCol(0, 0, 0) )
 	love.graphics.polygon("fill", verts)
 	love.graphics.setColor( self:getCol(0, 0, 0) )
@@ -369,7 +369,7 @@ end
 function Part_Fin:drawThis()
 	if not self.data.phase then self.data.phase = 0 end
 
-	local dir = vector(40, 0):rotated(self.rotation)
+	local dir = vector(100*self.size, 0):rotated(self.rotation)
 
 	for i=0, 4 do
 		local speed = 1.0 * 2.0
