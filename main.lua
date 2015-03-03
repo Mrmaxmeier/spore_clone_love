@@ -207,6 +207,7 @@ function Part:updatePosition(newPosition)
 			if handleRot[i] then
 				self.connected[i].rotation = handleRot[i]
 			end
+			self.connected[i].size = self.size * 0.6
 			self.connected[i]:updatePosition(handlePos)
 		end
 	end
