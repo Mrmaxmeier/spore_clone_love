@@ -82,7 +82,7 @@ end
 
 
 function Creature:draw()
-	if self.body then body:draw() end
+	if self.body then self.body:draw() end
 end
 
 function Creature:partsChanged()
@@ -94,8 +94,36 @@ function Creature:partsChanged()
     for k, v in ipairs(reversedParts) do
         self.partList[itemCount + 1 - k] = v
     end
-    print("PartList:")
-    print(#self.partList)
+end
+
+
+function generateCreature(complexity)
+	local numParts = love.math.random(3, complexity*12)
+	local creature = Creature()
+	creature.body = Part_Body()
+	creature:partsChanged()
+
+	while #creature.partList < numParts do
+		local allHinges = {}
+		for partI, part in ipairs(creature.partList) do
+			print("part")
+			for handle, v in ipairs(part:getHandlePositions_Abs()) do
+				if not part.connected[handle] then
+					table.insert(allHinges, {part=part, handle=handle})
+				end
+			end
+		end
+		print("al", #allHinges)
+		if #allHinges < 1 then break end
+
+		local newPart = ALL_PARTS[math.random(1, #ALL_PARTS)]()
+		local rnd = math.random(1, #allHinges)
+		print(rnd)
+		allHinges[rnd].part:attach(newPart, allHinges[rnd].handle)
+		creature:partsChanged()
+	end
+	pretty.dump(creature.body:ser())
+	return creature
 end
 
 
@@ -439,20 +467,21 @@ creatureCreator = {}
 function creatureCreator:enter()
 	cam = Camera(0, 0)
 	cam:zoomTo(2)
-	creature = Creature()
-	body = Part_Body()
-	creature.body = body
-	body2 = Part_Body()
-	body3 = Part_Body()
-	fin = Part_Fin()
-	fin2 = Part_Fin()
-	fin3 = Part_Fin()
-	eye2 = Part_Eye()
-	body:attach(fin, 1)
-	body:attach(fin3, 3)
-	body:attach(body2, 2)
-	body2:attach(body3, 1)
-	body3:attach(eye2, 1)
+	-- creature = Creature()
+	-- body = Part_Body()
+	-- creature.body = body
+	-- body2 = Part_Body()
+	-- body3 = Part_Body()
+	-- fin = Part_Fin()
+	-- fin2 = Part_Fin()
+	-- fin3 = Part_Fin()
+	-- eye2 = Part_Eye()
+	-- body:attach(fin, 1)
+	-- body:attach(fin3, 3)
+	-- body:attach(body2, 2)
+	-- body2:attach(body3, 1)
+	-- body3:attach(eye2, 1)
+	creature = generateCreature(1.0)
 	
 
 	--eye2:detach()
@@ -460,14 +489,14 @@ function creatureCreator:enter()
 
 	creature:partsChanged()
 
-	body:updatePosition(vector(0, 0))
-	cam:lookAt(body.position:unpack())
+	creature.body:updatePosition(vector(0, 0))
+	cam:lookAt(creature.body.position:unpack())
 
 
 	--print("Parts")
 	--pretty.dump(body:getAllParts())
 	print("Stats:")
-	pretty.dump(body:getAllStats())
+	pretty.dump(creature.body:getAllStats())
 
 	love.graphics.setNewFont(30)
 
@@ -518,7 +547,7 @@ end
 function creatureCreator:update(dt)
 	--cam:zoom(1 + dt*0.1)
 	creature:update(dt)
-	body:updatePosition(vector(0, 0))
+	creature.body:updatePosition(vector(0, 0))
 	--body.rotation = love.timer.getTime()*0.1
 	if love.keyboard.isDown("left")  then body.rotation = body.rotation - dt end
 	if love.keyboard.isDown("right") then body.rotation = body.rotation + dt end
@@ -570,9 +599,7 @@ function creatureCreator:mousepressed( x, y, mb )
 	end
 
 	if mb == "r" then
-		print("\n\n\nSwag:")
-		creature:partsChanged()
-		pretty.dump(creature.body:ser())
+		creature = generateCreature(1.0)
 	end
 end
 
