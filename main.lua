@@ -72,7 +72,7 @@ function Creature:selectedHinge()
 	local mPos = vector(cam:mousepos())
 	for i, part in ipairs(self.partList) do
 		for hI, hPos in ipairs(part:getHandlePositions_Abs()) do
-			if mPos:dist(hPos) < 20*part.size then
+			if mPos:dist(hPos) < 30*part.size then
 				return part, hI, hPos --part, hingeIndex
 			end
 		end
