@@ -2,7 +2,8 @@ Gamestate = require "hump.gamestate"
 vector = require "hump.vector"
 Camera = require "hump.camera"
 Class = require "hump.class"
-
+loveframes = require("loveframes")
+lovebird = require("lovebird")
 
 local serpent = require "serpent"
 require 'pl'
@@ -302,6 +303,15 @@ function Part:setData(key, data)
 	self.data[key] = data
 end
 
+function Part:editorUI(frame)
+	local text = loveframes.Create("text", frame)
+	text:SetText("Nothing to do here.")
+	text.Update = function(object, dt)
+		object:CenterX()
+		object:CenterY()
+	end
+end
+
 function loadPart(t)
 	local partTable = {}
 	for i,v in ipairs(ALL_PARTS) do
@@ -368,6 +378,28 @@ function Part_Body:setData(key, val)
 end
 
 
+function Part_Body:editorUI(frame)
+	local text = loveframes.Create("text", frame)
+	text:SetText("#corners: 3")
+	text.Update = function(object, dt)
+		object:CenterX()
+		object:SetY(40)
+	end
+	local cornersSlider = loveframes.Create("slider", frame)
+	cornersSlider:SetPos(5, 30)
+	cornersSlider:SetWidth(290)
+	cornersSlider:SetMinMax(3, 8.5)
+	cornersSlider.Update = function(object, dt)
+		object:CenterX()
+		object:CenterY()
+		object:SetWidth(frame:GetWidth()-20)
+	end
+	cornersSlider.OnValueChanged = function(object)
+		local corners = math.floor(object:GetValue())
+		text:SetText("#corners: "..corners)
+		self:setData("corners", corners)
+	end
+end
 
 
 Part_Eye = Class{__includes=Part, name="Part_Eye"}
@@ -526,6 +558,13 @@ function creatureCreator:enter()
 	for i, v in ipairs(ALL_PARTS) do
 		sidebar[i] = v()
 	end
+
+	editorSelected = nil
+	partEditorFrame = loveframes.Create("frame")
+	partEditorFrame:SetName("Part Editor")
+	partEditorFrame:SetResizable(true)
+	partEditorFrame:SetMinWidth(200)
+	partEditorFrame:SetMinHeight(100)	
 end
 
 function creatureCreator:draw()
@@ -561,9 +600,15 @@ function creatureCreator:draw()
 		mouseHandle:draw()
 		cam:detach()
 	end
+
+
+	if editorSelected ~= nil then
+		partEditorFrame:draw()
+	end
 end
 
 function creatureCreator:update(dt)
+	loveframes.update(dt)
 	--cam:zoom(1 + dt*0.1)
 	creature:update(dt)
 	creature.body:updatePosition(vector(0, 0))
@@ -584,14 +629,13 @@ function creatureCreator:update(dt)
 end
 
 function creatureCreator:mousepressed( x, y, mb )
+	loveframes.mousepressed(x, y, mb)
 	if mb == "wu" then cam:zoom(1.0 + 0.2) end
 	if mb == "wd" then cam:zoom(1.0 - 0.2) end
 
 
 	if mb == "l" then
-		if mouseHandle ~= nil then
-			-- search for handles
-		else
+		if mouseHandle == nil and not partEditorFrame:GetHover() then
 			-- search for parts
 			res = creature:selectedPart()
 			if res ~= nil then
@@ -615,6 +659,21 @@ function creatureCreator:mousepressed( x, y, mb )
 			end
 		end
 	end
+
+	if mb == "r" then
+		if mouseHandle == nil then
+			editorSelected = creature:selectedPart()
+			if editorSelected ~= nil then
+				while #(partEditorFrame:GetChildren()) > 0 do
+					--ente
+					for i,v in ipairs(partEditorFrame:GetChildren()) do
+						v:Remove()
+					end
+				end
+				editorSelected:editorUI(partEditorFrame)
+			end
+		end
+	end
 end
 
 function creatureCreator:mousemoved(x, y, dx, dy)
@@ -630,6 +689,7 @@ function creatureCreator:mousemoved(x, y, dx, dy)
 end
 
 function creatureCreator:mousereleased(x, y, mb)
+	loveframes.mousereleased(x, y, mb)
 	if mb == "l" then
 		if mouseHandle ~= nil then
 			p, hI, hPos = creature:selectedHinge()
@@ -642,6 +702,7 @@ function creatureCreator:mousereleased(x, y, mb)
 	end
 end
 function creatureCreator:keypressed(key)
+	loveframes.keypressed(key)
 	if key == "escape" then
 		love.event.quit()
 	end
@@ -656,6 +717,10 @@ function creatureCreator:keypressed(key)
 	if key == "r" then
 		creature = generateCreature(1.0)
 	end
+end
+
+function creatureCreator:textinput(text)
+	loveframes.textinput(text)
 end
 
 function creatureCreator:sidebarSelected()
@@ -679,12 +744,14 @@ function love.load()
 	print("\aSWAG")
 
 	-- only register draw, update and quit
-	Gamestate.registerEvents{'draw', 'update', 'quit', 'mousepressed', 'mousereleased', 'mousemoved', 'keypressed'}
+	Gamestate.registerEvents{'draw', 'update', 'quit', 'mousepressed',
+							 'mousereleased', 'mousemoved', 'keypressed', 'textinput'}
 	Gamestate.switch(creatureCreator)
 
 end
 
 function love.update(dt)
+	lovebird.update()
 end
 
 function love.draw()
