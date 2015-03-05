@@ -549,8 +549,8 @@ function creatureCreator:update(dt)
 	creature:update(dt)
 	creature.body:updatePosition(vector(0, 0))
 	--body.rotation = love.timer.getTime()*0.1
-	if love.keyboard.isDown("left")  then body.rotation = body.rotation - dt end
-	if love.keyboard.isDown("right") then body.rotation = body.rotation + dt end
+	if love.keyboard.isDown("left")  then creature.body.rotation = creature.body.rotation - dt end
+	if love.keyboard.isDown("right") then creature.body.rotation = creature.body.rotation + dt end
 
 	for i, v in ipairs(sidebar) do
 		v.isHighlighted = false
@@ -627,7 +627,11 @@ function creatureCreator:mousereleased(x, y, mb)
 		mouseHandle = nil
 	end
 end
-
+function creatureCreator:keypressed(key)
+	if key == "escape" then
+		love.event.quit()
+	end
+end
 
 function creatureCreator:sidebarSelected()
 	local absMPos = vector(love.mouse.getPosition())
@@ -650,7 +654,7 @@ function love.load()
 	print("\aSWAG")
 
 	-- only register draw, update and quit
-	Gamestate.registerEvents{'draw', 'update', 'quit', 'mousepressed', 'mousereleased', 'mousemoved'}
+	Gamestate.registerEvents{'draw', 'update', 'quit', 'mousepressed', 'mousereleased', 'mousemoved', 'keypressed'}
 	Gamestate.switch(creatureCreator)
 
 end
