@@ -7,3 +7,6 @@
 [submodule "penlight"]
 	path = penlight
 	url = https://github.com/stevedonovan/Penlight.git
+[submodule "loveframes"]
+	path = loveframes
+	url = https://github.com/KennyShields/LoveFrames.git

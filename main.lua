@@ -106,23 +106,20 @@ function generateCreature(complexity)
 	while #creature.partList < numParts do
 		local allHinges = {}
 		for partI, part in ipairs(creature.partList) do
-			print("part")
 			for handle, v in ipairs(part:getHandlePositions_Abs()) do
 				if not part.connected[handle] then
 					table.insert(allHinges, {part=part, handle=handle})
 				end
 			end
 		end
-		print("al", #allHinges)
 		if #allHinges < 1 then break end
 
 		local newPart = ALL_PARTS[math.random(1, #ALL_PARTS)]()
 		local rnd = math.random(1, #allHinges)
-		print(rnd)
 		allHinges[rnd].part:attach(newPart, allHinges[rnd].handle)
 		creature:partsChanged()
 	end
-	pretty.dump(creature.body:ser())
+	--pretty.dump(creature.body:ser())
 	return creature
 end
 
@@ -214,7 +211,6 @@ function Part:detach()
 	if self.parent ~= nil then
 		if self.handle ~= nil then
 			self.parent.connected[self.handle] = nil
-			print("detached")
 		else
 			print("detach no handle")
 		end
@@ -307,8 +303,6 @@ function Part:setData(key, data)
 end
 
 function loadPart(t)
-	print("loading part")
-	print(t)
 	local partTable = {}
 	for i,v in ipairs(ALL_PARTS) do
 		partTable[v.name] = v
@@ -318,7 +312,6 @@ function loadPart(t)
 	for k, v in pairs(t.connected) do
 		if v ~= nil then
 			part:attach(loadPart(v), k)
-			print("attaching", k)
 		end
 	end
 	return part
@@ -359,6 +352,19 @@ function Part_Body:drawThis()
 	love.graphics.polygon("fill", verts)
 	love.graphics.setColor( self:getCol(255, 255, 255) )
 	love.graphics.polygon("line", verts)
+end
+
+
+function Part_Body:setData(key, val)
+	if key == "corners" then
+		if val < 3 then val = 3 end
+		if val < self.data.corners then
+			for i, v in ipairs(self.connected) do
+				if i > val then v:detach() end
+			end
+		end
+		self.data[key] = val
+	else self.data[key] = val end
 end
 
 
@@ -589,7 +595,6 @@ function creatureCreator:mousepressed( x, y, mb )
 			-- search for parts
 			res = creature:selectedPart()
 			if res ~= nil then
-				print("selectedPart")
 				if res.parent ~= nil then
 					mouseHandle = res:clone()
 					if love.keyboard.isDown("lalt") or love.keyboard.isDown("ralt") then
@@ -643,6 +648,9 @@ function creatureCreator:keypressed(key)
 
 	if key == "+" then
 		creature.body:setData("corners", creature.body.data.corners + 1)
+	end
+	if key == "-" then
+		creature.body:setData("corners", creature.body.data.corners - 1)
 	end
 
 	if key == "r" then
