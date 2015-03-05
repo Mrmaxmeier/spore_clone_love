@@ -299,13 +299,16 @@ function Part:ser()
 end
 
 function Part:loadData( t )
-	-- body
+	self.data = t
 end
 
 function loadPart(t)
 	print("loading part")
 	print(t)
-	local partTable = {Part_Eye=Part_Eye, Part_Body=Part_Body, Part_Fin=Part_Fin, Part_Mouth=Part_Mouth}
+	local partTable = {}
+	for i,v in ipairs(ALL_PARTS) do
+		partTable[v.name] = v
+	end
 	local part = partTable[t.partType]()
 	part:loadData(t.data)
 	for k, v in pairs(t.connected) do
@@ -327,29 +330,35 @@ end
 Part_Body = Class{__includes=Part, name="Part_Body"}
 
 function Part_Body:getHandlePositions_Rel()
+	if not self.data.corners then self.data.corners = 3 end
 	local res = {}
-	for i=0, 2 do
-		pos = vector(100 * self.size, 0):rotated(2.0 * math.pi / 3.0 * (3-i) + self.rotation)
+	for i=0, self.data.corners-1 do
+		pos = vector(100 * self.size, 0):rotated(2.0 * math.pi / self.data.corners * (self.data.corners-i) + self.rotation)
 		table.insert(res, pos)
 	end
 	return res
 end
 
 function Part_Body:getHandleRotation()
+	if not self.data.corners then self.data.corners = 3 end
 	local res = {}
-	for i=0,2 do
-		table.insert(res, 4.0 * math.pi / 3.0 * i + self.rotation)
+	for i=0, self.data.corners-1 do
+		table.insert(res, (2.0 * math.pi / self.data.corners) * (self.data.corners-i) + self.rotation)
 	end
 	return res
 end
 
 function Part_Body:drawThis()
-	verts  = genPoly(self.position, 3, 100*self.size, self.rotation)
+	if not self.data.corners then self.data.corners = 3 end
+	verts  = genPoly(self.position, self.data.corners, 100*self.size, self.rotation)
 	love.graphics.setColor( self:getCol(0, 0, 0) )
 	love.graphics.polygon("fill", verts)
 	love.graphics.setColor( self:getCol(255, 255, 255) )
 	love.graphics.polygon("line", verts)
 end
+
+
+
 
 Part_Eye = Class{__includes=Part, name="Part_Eye"}
 
@@ -630,6 +639,10 @@ end
 function creatureCreator:keypressed(key)
 	if key == "escape" then
 		love.event.quit()
+	end
+
+	if key == "+" then
+		creature.body.data.corners = creature.body.data.corners + 1
 	end
 end
 
