@@ -302,6 +302,10 @@ function Part:loadData( t )
 	self.data = t
 end
 
+function Part:setData(key, data)
+	self.data[key] = data
+end
+
 function loadPart(t)
 	print("loading part")
 	print(t)
@@ -606,10 +610,6 @@ function creatureCreator:mousepressed( x, y, mb )
 			end
 		end
 	end
-
-	if mb == "r" then
-		creature = generateCreature(1.0)
-	end
 end
 
 function creatureCreator:mousemoved(x, y, dx, dy)
@@ -642,7 +642,11 @@ function creatureCreator:keypressed(key)
 	end
 
 	if key == "+" then
-		creature.body.data.corners = creature.body.data.corners + 1
+		creature.body:setData("corners", creature.body.data.corners + 1)
+	end
+
+	if key == "r" then
+		creature = generateCreature(1.0)
 	end
 end
 
