@@ -2,7 +2,8 @@ Gamestate = require "hump.gamestate"
 vector = require "hump.vector"
 Camera = require "hump.camera"
 Class = require "hump.class"
-
+loveframes = require("loveframes")
+lovebird = require("lovebird")
 
 local serpent = require "serpent"
 require 'pl'
@@ -72,7 +73,7 @@ function Creature:selectedHinge()
 	local mPos = vector(cam:mousepos())
 	for i, part in ipairs(self.partList) do
 		for hI, hPos in ipairs(part:getHandlePositions_Abs()) do
-			if mPos:dist(hPos) < 20*part.size then
+			if mPos:dist(hPos) < 30*part.size then
 				return part, hI, hPos --part, hingeIndex
 			end
 		end
@@ -82,7 +83,7 @@ end
 
 
 function Creature:draw()
-	if self.body then body:draw() end
+	if self.body then self.body:draw() end
 end
 
 function Creature:partsChanged()
@@ -94,8 +95,33 @@ function Creature:partsChanged()
     for k, v in ipairs(reversedParts) do
         self.partList[itemCount + 1 - k] = v
     end
-    print("PartList:")
-    print(#self.partList)
+end
+
+
+function generateCreature(complexity)
+	local numParts = love.math.random(3, complexity*12)
+	local creature = Creature()
+	creature.body = Part_Body()
+	creature:partsChanged()
+
+	while #creature.partList < numParts do
+		local allHinges = {}
+		for partI, part in ipairs(creature.partList) do
+			for handle, v in ipairs(part:getHandlePositions_Abs()) do
+				if not part.connected[handle] then
+					table.insert(allHinges, {part=part, handle=handle})
+				end
+			end
+		end
+		if #allHinges < 1 then break end
+
+		local newPart = ALL_PARTS[math.random(1, #ALL_PARTS)]()
+		local rnd = math.random(1, #allHinges)
+		allHinges[rnd].part:attach(newPart, allHinges[rnd].handle)
+		creature:partsChanged()
+	end
+	--pretty.dump(creature.body:ser())
+	return creature
 end
 
 
@@ -186,7 +212,6 @@ function Part:detach()
 	if self.parent ~= nil then
 		if self.handle ~= nil then
 			self.parent.connected[self.handle] = nil
-			print("detached")
 		else
 			print("detach no handle")
 		end
@@ -271,19 +296,32 @@ function Part:ser()
 end
 
 function Part:loadData( t )
-	-- body
+	self.data = t
+end
+
+function Part:setData(key, data)
+	self.data[key] = data
+end
+
+function Part:editorUI(frame)
+	local text = loveframes.Create("text", frame)
+	text:SetText("Nothing to do here.")
+	text.Update = function(object, dt)
+		object:CenterX()
+		object:CenterY()
+	end
 end
 
 function loadPart(t)
-	print("loading part")
-	print(t)
-	local partTable = {Part_Eye=Part_Eye, Part_Body=Part_Body, Part_Fin=Part_Fin, Part_Mouth=Part_Mouth}
+	local partTable = {}
+	for i,v in ipairs(ALL_PARTS) do
+		partTable[v.name] = v
+	end
 	local part = partTable[t.partType]()
 	part:loadData(t.data)
 	for k, v in pairs(t.connected) do
 		if v ~= nil then
 			part:attach(loadPart(v), k)
-			print("attaching", k)
 		end
 	end
 	return part
@@ -299,29 +337,70 @@ end
 Part_Body = Class{__includes=Part, name="Part_Body"}
 
 function Part_Body:getHandlePositions_Rel()
+	if not self.data.corners then self.data.corners = 3 end
 	local res = {}
-	for i=0, 2 do
-		pos = vector(100 * self.size, 0):rotated(2.0 * math.pi / 3.0 * (3-i) + self.rotation)
+	for i=0, self.data.corners-1 do
+		pos = vector(100 * self.size, 0):rotated(2.0 * math.pi / self.data.corners * (self.data.corners-i) + self.rotation)
 		table.insert(res, pos)
 	end
 	return res
 end
 
 function Part_Body:getHandleRotation()
+	if not self.data.corners then self.data.corners = 3 end
 	local res = {}
-	for i=0,2 do
-		table.insert(res, 4.0 * math.pi / 3.0 * i + self.rotation)
+	for i=0, self.data.corners-1 do
+		table.insert(res, (2.0 * math.pi / self.data.corners) * (self.data.corners-i) + self.rotation)
 	end
 	return res
 end
 
 function Part_Body:drawThis()
-	verts  = genPoly(self.position, 3, 100*self.size, self.rotation)
+	if not self.data.corners then self.data.corners = 3 end
+	verts  = genPoly(self.position, self.data.corners, 100*self.size, self.rotation)
 	love.graphics.setColor( self:getCol(0, 0, 0) )
 	love.graphics.polygon("fill", verts)
 	love.graphics.setColor( self:getCol(255, 255, 255) )
 	love.graphics.polygon("line", verts)
 end
+
+
+function Part_Body:setData(key, val)
+	if key == "corners" then
+		if val < 3 then val = 3 end
+		if val < self.data.corners then
+			for i, v in ipairs(self.connected) do
+				if i > val then v:detach() end
+			end
+		end
+		self.data[key] = val
+	else self.data[key] = val end
+end
+
+
+function Part_Body:editorUI(frame)
+	local text = loveframes.Create("text", frame)
+	text:SetText("#corners: 3")
+	text.Update = function(object, dt)
+		object:CenterX()
+		object:SetY(40)
+	end
+	local cornersSlider = loveframes.Create("slider", frame)
+	cornersSlider:SetPos(5, 30)
+	cornersSlider:SetWidth(290)
+	cornersSlider:SetMinMax(3, 8.5)
+	cornersSlider.Update = function(object, dt)
+		object:CenterX()
+		object:CenterY()
+		object:SetWidth(frame:GetWidth()-20)
+	end
+	cornersSlider.OnValueChanged = function(object)
+		local corners = math.floor(object:GetValue())
+		text:SetText("#corners: "..corners)
+		self:setData("corners", corners)
+	end
+end
+
 
 Part_Eye = Class{__includes=Part, name="Part_Eye"}
 
@@ -439,20 +518,21 @@ creatureCreator = {}
 function creatureCreator:enter()
 	cam = Camera(0, 0)
 	cam:zoomTo(2)
-	creature = Creature()
-	body = Part_Body()
-	creature.body = body
-	body2 = Part_Body()
-	body3 = Part_Body()
-	fin = Part_Fin()
-	fin2 = Part_Fin()
-	fin3 = Part_Fin()
-	eye2 = Part_Eye()
-	body:attach(fin, 1)
-	body:attach(fin3, 3)
-	body:attach(body2, 2)
-	body2:attach(body3, 1)
-	body3:attach(eye2, 1)
+	-- creature = Creature()
+	-- body = Part_Body()
+	-- creature.body = body
+	-- body2 = Part_Body()
+	-- body3 = Part_Body()
+	-- fin = Part_Fin()
+	-- fin2 = Part_Fin()
+	-- fin3 = Part_Fin()
+	-- eye2 = Part_Eye()
+	-- body:attach(fin, 1)
+	-- body:attach(fin3, 3)
+	-- body:attach(body2, 2)
+	-- body2:attach(body3, 1)
+	-- body3:attach(eye2, 1)
+	creature = generateCreature(1.0)
 	
 
 	--eye2:detach()
@@ -460,14 +540,14 @@ function creatureCreator:enter()
 
 	creature:partsChanged()
 
-	body:updatePosition(vector(0, 0))
-	cam:lookAt(body.position:unpack())
+	creature.body:updatePosition(vector(0, 0))
+	cam:lookAt(creature.body.position:unpack())
 
 
 	--print("Parts")
 	--pretty.dump(body:getAllParts())
 	print("Stats:")
-	pretty.dump(body:getAllStats())
+	pretty.dump(creature.body:getAllStats())
 
 	love.graphics.setNewFont(30)
 
@@ -478,6 +558,13 @@ function creatureCreator:enter()
 	for i, v in ipairs(ALL_PARTS) do
 		sidebar[i] = v()
 	end
+
+	editorSelected = nil
+	partEditorFrame = loveframes.Create("frame")
+	partEditorFrame:SetName("Part Editor")
+	partEditorFrame:SetResizable(true)
+	partEditorFrame:SetMinWidth(200)
+	partEditorFrame:SetMinHeight(100)	
 end
 
 function creatureCreator:draw()
@@ -513,15 +600,21 @@ function creatureCreator:draw()
 		mouseHandle:draw()
 		cam:detach()
 	end
+
+
+	if editorSelected ~= nil then
+		partEditorFrame:draw()
+	end
 end
 
 function creatureCreator:update(dt)
+	loveframes.update(dt)
 	--cam:zoom(1 + dt*0.1)
 	creature:update(dt)
-	body:updatePosition(vector(0, 0))
+	creature.body:updatePosition(vector(0, 0))
 	--body.rotation = love.timer.getTime()*0.1
-	if love.keyboard.isDown("left")  then body.rotation = body.rotation - dt end
-	if love.keyboard.isDown("right") then body.rotation = body.rotation + dt end
+	if love.keyboard.isDown("left")  then creature.body.rotation = creature.body.rotation - dt end
+	if love.keyboard.isDown("right") then creature.body.rotation = creature.body.rotation + dt end
 
 	for i, v in ipairs(sidebar) do
 		v.isHighlighted = false
@@ -536,18 +629,16 @@ function creatureCreator:update(dt)
 end
 
 function creatureCreator:mousepressed( x, y, mb )
+	loveframes.mousepressed(x, y, mb)
 	if mb == "wu" then cam:zoom(1.0 + 0.2) end
 	if mb == "wd" then cam:zoom(1.0 - 0.2) end
 
 
 	if mb == "l" then
-		if mouseHandle ~= nil then
-			-- search for handles
-		else
+		if mouseHandle == nil and not partEditorFrame:GetHover() then
 			-- search for parts
 			res = creature:selectedPart()
 			if res ~= nil then
-				print("selectedPart")
 				if res.parent ~= nil then
 					mouseHandle = res:clone()
 					if love.keyboard.isDown("lalt") or love.keyboard.isDown("ralt") then
@@ -570,9 +661,18 @@ function creatureCreator:mousepressed( x, y, mb )
 	end
 
 	if mb == "r" then
-		print("\n\n\nSwag:")
-		creature:partsChanged()
-		pretty.dump(creature.body:ser())
+		if mouseHandle == nil then
+			editorSelected = creature:selectedPart()
+			if editorSelected ~= nil then
+				while #(partEditorFrame:GetChildren()) > 0 do
+					--ente
+					for i,v in ipairs(partEditorFrame:GetChildren()) do
+						v:Remove()
+					end
+				end
+				editorSelected:editorUI(partEditorFrame)
+			end
+		end
 	end
 end
 
@@ -589,6 +689,7 @@ function creatureCreator:mousemoved(x, y, dx, dy)
 end
 
 function creatureCreator:mousereleased(x, y, mb)
+	loveframes.mousereleased(x, y, mb)
 	if mb == "l" then
 		if mouseHandle ~= nil then
 			p, hI, hPos = creature:selectedHinge()
@@ -600,7 +701,27 @@ function creatureCreator:mousereleased(x, y, mb)
 		mouseHandle = nil
 	end
 end
+function creatureCreator:keypressed(key)
+	loveframes.keypressed(key)
+	if key == "escape" then
+		love.event.quit()
+	end
 
+	if key == "+" then
+		creature.body:setData("corners", creature.body.data.corners + 1)
+	end
+	if key == "-" then
+		creature.body:setData("corners", creature.body.data.corners - 1)
+	end
+
+	if key == "r" then
+		creature = generateCreature(1.0)
+	end
+end
+
+function creatureCreator:textinput(text)
+	loveframes.textinput(text)
+end
 
 function creatureCreator:sidebarSelected()
 	local absMPos = vector(love.mouse.getPosition())
@@ -623,12 +744,14 @@ function love.load()
 	print("\aSWAG")
 
 	-- only register draw, update and quit
-	Gamestate.registerEvents{'draw', 'update', 'quit', 'mousepressed', 'mousereleased', 'mousemoved'}
+	Gamestate.registerEvents{'draw', 'update', 'quit', 'mousepressed',
+							 'mousereleased', 'mousemoved', 'keypressed', 'textinput'}
 	Gamestate.switch(creatureCreator)
 
 end
 
 function love.update(dt)
+	lovebird.update()
 end
 
 function love.draw()
