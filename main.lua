@@ -9,7 +9,7 @@ local serpent = require "serpent"
 require 'pl'
 --local C= require 'pl.comprehension' . new()
 
-
+DEBUG_MODE = true
 
 function genPoly(posMod, corners, size, rotation)
 	local verts = {}
@@ -605,6 +605,12 @@ function creatureCreator:draw()
 	if editorSelected ~= nil then
 		partEditorFrame:draw()
 	end
+
+	
+	if DEBUG_MODE then
+		love.graphics.setColor(255, 255, 255)
+		love.graphics.print("d", 0, 0)
+	end
 end
 
 function creatureCreator:update(dt)
@@ -717,6 +723,10 @@ function creatureCreator:keypressed(key)
 	if key == "r" then
 		creature = generateCreature(1.0)
 	end
+
+	if key == "d" then
+		DEBUG_MODE = not DEBUG_MODE
+	end
 end
 
 function creatureCreator:textinput(text)
@@ -751,7 +761,10 @@ function love.load()
 end
 
 function love.update(dt)
-	lovebird.update()
+	if DEBUG_MODE then
+		lovebird.update()
+		--horrible performance on windows
+	end
 end
 
 function love.draw()
