@@ -303,18 +303,18 @@ function Part:setData(key, data)
 	self.data[key] = data
 end
 
-function Part:editorUI(frame)
+function Part:stdEditorUI(frame, rows)
 	local sizeModText = loveframes.Create("text", frame)
 	sizeModText.Update = function(object, dt)
 		object:CenterX()
-		object:SetY(frame:GetHeight()/5*1)
+		object:SetY(frame:GetHeight()/rows*1)
 	end
 	local sizeModSlider = loveframes.Create("slider", frame)
 	sizeModSlider:SetWidth(290)
 	sizeModSlider:SetMinMax(1, 4)
 	sizeModSlider.Update = function(object, dt)
 		object:CenterX()
-		object:SetY(frame:GetHeight()/5*2)
+		object:SetY(frame:GetHeight()/rows*2)
 		object:SetWidth(frame:GetWidth()-20)
 	end
 	sizeModSlider.OnValueChanged = function(object)
@@ -329,22 +329,26 @@ function Part:editorUI(frame)
 	local rotModText = loveframes.Create("text", frame)
 	rotModText.Update = function(object, dt)
 		object:CenterX()
-		object:SetY(frame:GetHeight()/5*3)
+		object:SetY(frame:GetHeight()/rows*3)
 	end
 	local rotModSlider = loveframes.Create("slider", frame)
 	rotModSlider:SetWidth(290)
 	rotModSlider:SetMinMax(0, 360)
 	rotModSlider.Update = function(object, dt)
 		object:CenterX()
-		object:SetY(frame:GetHeight()/5*4)
+		object:SetY(frame:GetHeight()/rows*4)
 		object:SetWidth(frame:GetWidth()-20)
 	end
 	rotModSlider.OnValueChanged = function(object)
-		local rotMod = math.floor(object:GetValue())
+		local rotMod = math.floor(object:GetValue()/6)*6
 		rotModText:SetText("rotMod: "..rotMod)
 		self:setData("rotMod", rotMod*(math.pi/180))
 	end
 	rotModSlider:SetValue(self.data.rotMod/(math.pi/180))
+end
+
+function Part:editorUI(frame)
+	self:stdEditorUI(frame, 5)
 end
 
 function loadPart(t)
@@ -414,10 +418,13 @@ end
 
 
 function Part_Body:editorUI(frame)
+	local rows = 7
+	self:stdEditorUI(frame, rows)
+
 	local text = loveframes.Create("text", frame)
 	text.Update = function(object, dt)
 		object:CenterX()
-		object:SetY(40)
+		object:SetY(frame:GetHeight()/rows*5)
 	end
 	local cornersSlider = loveframes.Create("slider", frame)
 	cornersSlider:SetPos(5, 30)
@@ -425,7 +432,7 @@ function Part_Body:editorUI(frame)
 	cornersSlider:SetMinMax(3, 8.5)
 	cornersSlider.Update = function(object, dt)
 		object:CenterX()
-		object:CenterY()
+		object:SetY(frame:GetHeight()/rows*6)
 		object:SetWidth(frame:GetWidth()-20)
 	end
 	cornersSlider.OnValueChanged = function(object)
@@ -578,8 +585,8 @@ function creatureCreator:enter()
 	partEditorFrame = loveframes.Create("frame")
 	partEditorFrame:SetName("Part Editor")
 	partEditorFrame:SetResizable(true)
-	partEditorFrame:SetMinWidth(200)
-	partEditorFrame:SetMinHeight(100)	
+	partEditorFrame:SetMinWidth(200):SetMinHeight(175):SetHeight(200)
+	partEditorFrame:CenterWithinArea(love.graphics.getWidth() - 200, 0, 100, 200)	
 end
 
 function creatureCreator:draw()
