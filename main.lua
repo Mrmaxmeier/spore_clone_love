@@ -149,7 +149,7 @@ end
 
 function Part:draw()
 	self:drawThis()
-	if true then self:drawHandles() end
+	if mouseHandle ~= nil then self:drawHandles() end
 
 	for i, connected in pairs(self.connected) do
 		if connected ~= nil then
@@ -586,7 +586,12 @@ function creatureCreator:enter()
 	partEditorFrame:SetName("Part Editor")
 	partEditorFrame:SetResizable(true)
 	partEditorFrame:SetMinWidth(200):SetMinHeight(175):SetHeight(200)
-	partEditorFrame:CenterWithinArea(love.graphics.getWidth() - 200, 0, 100, 200)	
+	partEditorFrame:CenterWithinArea(love.graphics.getWidth() - 200, 0, 100, 200)
+	partEditorFrame.OnClose = function (object)
+		editorSelected = nil
+		return false
+	end
+	mouseHandle = nil
 end
 
 function creatureCreator:draw()
