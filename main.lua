@@ -120,7 +120,7 @@ function generateCreature(complexity)
 		allHinges[rnd].part:attach(newPart, allHinges[rnd].handle)
 		creature:partsChanged()
 	end
-	--pretty.dump(creature.body:ser())
+	creature:partsChanged()
 	return creature
 end
 
@@ -128,7 +128,7 @@ end
 
 Part = Class{
 	init = function(self)
-		self.data = {myData="lel"}
+		self.data = {sizeMod=2/3, rotMod=0}
 		self.position = vector(0, 0)
 		self.connected = {}
 		self.parent = nil
@@ -203,7 +203,7 @@ end
 
 function Part:attach(other, handle)
 	self.connected[handle] = other
-	other.size = self.size * 0.6
+	other.size = self.size * other.data.sizeMod
 	other.parent = self
 	other.handle = handle
 end
@@ -228,9 +228,9 @@ function Part:updatePosition(newPosition)
 	for i, handlePos in pairs(self:getHandlePositions_Abs()) do
 		if self.connected[i] then
 			if handleRot[i] then
-				self.connected[i].rotation = handleRot[i]
+				self.connected[i].rotation = handleRot[i] + self.connected[i].data.rotMod
 			end
-			self.connected[i].size = self.size * 0.6
+			self.connected[i].size = self.size * self.connected[i].data.sizeMod
 			self.connected[i]:updatePosition(handlePos)
 		end
 	end
@@ -288,11 +288,11 @@ function Part:insideHitbox(point)
 end
 
 function Part:ser()
-	local serTable = {connected = {}, data = {}, partType=self.name}
+	local serTable = {connected = {}, data = self.data, partType=self.name}
 	for k, v in pairs(self.connected) do
 		serTable.connected[k] = v:ser()
 	end
-	return serTable--serpent.dump(serTable)
+	return serTable
 end
 
 function Part:loadData( t )
@@ -304,12 +304,47 @@ function Part:setData(key, data)
 end
 
 function Part:editorUI(frame)
-	local text = loveframes.Create("text", frame)
-	text:SetText("Nothing to do here.")
-	text.Update = function(object, dt)
+	local sizeModText = loveframes.Create("text", frame)
+	sizeModText.Update = function(object, dt)
 		object:CenterX()
-		object:CenterY()
+		object:SetY(frame:GetHeight()/5*1)
 	end
+	local sizeModSlider = loveframes.Create("slider", frame)
+	sizeModSlider:SetWidth(290)
+	sizeModSlider:SetMinMax(1, 4)
+	sizeModSlider.Update = function(object, dt)
+		object:CenterX()
+		object:SetY(frame:GetHeight()/5*2)
+		object:SetWidth(frame:GetWidth()-20)
+	end
+	sizeModSlider.OnValueChanged = function(object)
+		local sizeMod = math.floor(object:GetValue())
+		sizeModText:SetText("SizeMod: "..sizeMod.."/3")
+		self:setData("sizeMod", sizeMod/3)
+	end
+	sizeModSlider:SetValue(math.floor(self.data.sizeMod*3))
+
+
+
+	local rotModText = loveframes.Create("text", frame)
+	rotModText.Update = function(object, dt)
+		object:CenterX()
+		object:SetY(frame:GetHeight()/5*3)
+	end
+	local rotModSlider = loveframes.Create("slider", frame)
+	rotModSlider:SetWidth(290)
+	rotModSlider:SetMinMax(0, 360)
+	rotModSlider.Update = function(object, dt)
+		object:CenterX()
+		object:SetY(frame:GetHeight()/5*4)
+		object:SetWidth(frame:GetWidth()-20)
+	end
+	rotModSlider.OnValueChanged = function(object)
+		local rotMod = math.floor(object:GetValue())
+		rotModText:SetText("rotMod: "..rotMod)
+		self:setData("rotMod", rotMod*(math.pi/180))
+	end
+	rotModSlider:SetValue(self.data.rotMod/(math.pi/180))
 end
 
 function loadPart(t)
@@ -380,7 +415,6 @@ end
 
 function Part_Body:editorUI(frame)
 	local text = loveframes.Create("text", frame)
-	text:SetText("#corners: 3")
 	text.Update = function(object, dt)
 		object:CenterX()
 		object:SetY(40)
@@ -399,6 +433,8 @@ function Part_Body:editorUI(frame)
 		text:SetText("#corners: "..corners)
 		self:setData("corners", corners)
 	end
+
+	cornersSlider:SetValue(self.data.corners)
 end
 
 
@@ -518,28 +554,7 @@ creatureCreator = {}
 function creatureCreator:enter()
 	cam = Camera(0, 0)
 	cam:zoomTo(2)
-	-- creature = Creature()
-	-- body = Part_Body()
-	-- creature.body = body
-	-- body2 = Part_Body()
-	-- body3 = Part_Body()
-	-- fin = Part_Fin()
-	-- fin2 = Part_Fin()
-	-- fin3 = Part_Fin()
-	-- eye2 = Part_Eye()
-	-- body:attach(fin, 1)
-	-- body:attach(fin3, 3)
-	-- body:attach(body2, 2)
-	-- body2:attach(body3, 1)
-	-- body3:attach(eye2, 1)
 	creature = generateCreature(1.0)
-	
-
-	--eye2:detach()
-
-
-	creature:partsChanged()
-
 	creature.body:updatePosition(vector(0, 0))
 	cam:lookAt(creature.body.position:unpack())
 
@@ -641,7 +656,7 @@ function creatureCreator:mousepressed( x, y, mb )
 
 
 	if mb == "l" then
-		if mouseHandle == nil and not partEditorFrame:GetHover() then
+		if mouseHandle == nil and not (editorSelected ~= nil and partEditorFrame:GetHover()) then
 			-- search for parts
 			res = creature:selectedPart()
 			if res ~= nil then
