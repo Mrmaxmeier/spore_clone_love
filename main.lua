@@ -9,12 +9,12 @@ local serpent = require "serpent"
 require 'pl'
 --local C= require 'pl.comprehension' . new()
 
-DEBUG_MODE = true
+DEBUG_MODE = false
 
 function genPoly(posMod, corners, size, rotation)
 	local verts = {}
 	for i=0, corners-1 do
-		pos = vector(size, 0):rotated(2.0 * math.pi / corners * i + rotation) + posMod
+		local pos = vector(size, 0):rotated(2.0 * math.pi / corners * i + rotation) + posMod
 		table.insert(verts, pos.x)
 		table.insert(verts, pos.y)
 	end
@@ -340,7 +340,7 @@ function Part_Body:getHandlePositions_Rel()
 	if not self.data.corners then self.data.corners = 3 end
 	local res = {}
 	for i=0, self.data.corners-1 do
-		pos = vector(100 * self.size, 0):rotated(2.0 * math.pi / self.data.corners * (self.data.corners-i) + self.rotation)
+		local pos = vector(100 * self.size, 0):rotated(2.0 * math.pi / self.data.corners * (self.data.corners-i) + self.rotation)
 		table.insert(res, pos)
 	end
 	return res
@@ -357,7 +357,7 @@ end
 
 function Part_Body:drawThis()
 	if not self.data.corners then self.data.corners = 3 end
-	verts  = genPoly(self.position, self.data.corners, 100*self.size, self.rotation)
+	local verts = genPoly(self.position, self.data.corners, 100*self.size, self.rotation)
 	love.graphics.setColor( self:getCol(0, 0, 0) )
 	love.graphics.polygon("fill", verts)
 	love.graphics.setColor( self:getCol(255, 255, 255) )
@@ -405,7 +405,7 @@ end
 Part_Eye = Class{__includes=Part, name="Part_Eye"}
 
 function Part_Eye:drawThis()
-	verts = genPoly(self.position, 4, 40*self.size, self.rotation)
+	local verts = genPoly(self.position, 4, 40*self.size, self.rotation)
 	love.graphics.setColor( self:getCol(255, 255, 255) )
 	love.graphics.polygon("fill", verts)
 	love.graphics.setColor( self:getCol(0, 0, 0) )
@@ -415,7 +415,7 @@ function Part_Eye:drawThis()
 	local diff2 = diff:clone()
 	if diff:len() > 8.0*self.size then diff = diff:normalized() * 8.0*self.size end
 
-	verts = genPoly(self.position + diff, 4, 25*self.size, self.rotation)
+	local verts = genPoly(self.position + diff, 4, 25*self.size, self.rotation)
 	love.graphics.setColor( self:getCol(0, 0, 255) )
 	love.graphics.polygon("fill", verts)
 	love.graphics.setColor( self:getCol(0, 0, 255) )
@@ -424,7 +424,7 @@ function Part_Eye:drawThis()
 
 
 	if diff2:len() > 12.0*self.size then diff2 = diff2:normalized() * 12.0*self.size end
-	verts = genPoly(self.position + diff2, 4, 15*self.size, self.rotation)
+	local verts = genPoly(self.position + diff2, 4, 15*self.size, self.rotation)
 	love.graphics.setColor( self:getCol(0, 0, 0) )
 	love.graphics.polygon("fill", verts)
 	love.graphics.setColor( self:getCol(0, 0, 0) )
@@ -451,7 +451,7 @@ function Part_Fin:drawThis()
 		local speed = 1.0 * 2.0
 		local pos = self.position + dir * i/4.0
 		pos = pos + vector(0, math.sin(self.data.phase * speed + i) * i):rotated(self.rotation)
-		verts = genPoly(pos, 4, 35*self.size - i*self.size * 5.0, self.rotation + math.pi*0.25)
+		local verts = genPoly(pos, 4, 35*self.size - i*self.size * 5.0, self.rotation + math.pi*0.25)
 		local cMod = (255/2)/4*i
 		love.graphics.setColor( self:getCol(255-cMod, 255-cMod, 255-cMod) )
 		love.graphics.polygon("fill", verts)
@@ -484,7 +484,7 @@ function Part_Mouth:drawThis()
 		local speed = 1.0 * 2.0
 		local pos = self.position + dir * i/4.0
 		pos = pos + vector(0, 5*math.abs(math.sin(self.data.phase))*i*self.size):rotated(self.rotation)
-		verts = genPoly(pos, 4, 35*self.size - i*self.size * 5.0, self.rotation + math.pi*0.25)
+		local verts = genPoly(pos, 4, 35*self.size - i*self.size * 5.0, self.rotation + math.pi*0.25)
 		local cMod = (255/2)/4*i
 		love.graphics.setColor( self:getCol(255-cMod, 255-cMod, 255-cMod) )
 		love.graphics.polygon("fill", verts)
@@ -496,7 +496,7 @@ function Part_Mouth:drawThis()
 		local speed = 1.0 * 2.0
 		local pos = self.position + dir * i/4.0
 		pos = pos + vector(0, -5*math.abs(math.sin(self.data.phase))*i*self.size):rotated(self.rotation)
-		verts = genPoly(pos, 4, 35*self.size - i*self.size * 5.0, self.rotation + math.pi*0.25)
+		local verts = genPoly(pos, 4, 35*self.size - i*self.size * 5.0, self.rotation + math.pi*0.25)
 		local cMod = (255/2)/4*i
 		love.graphics.setColor( self:getCol(255-cMod, 255-cMod, 255-cMod) )
 		love.graphics.polygon("fill", verts)
@@ -685,6 +685,9 @@ end
 function creatureCreator:mousemoved(x, y, dx, dy)
 	if mouseHandle ~= nil then
 		--dragging a part over handles
+		local p = nil
+		local hI = nil
+		local hPos = nil
 		p, hI, hPos = creature:selectedHinge()
 		if p ~= nil then
 			mouseHandle:updatePosition(hPos)
