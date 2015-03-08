@@ -158,7 +158,7 @@ function Part:draw()
 			connected:draw()
 		end
 	end
-	
+
 end
 
 function Part:update(dt)
@@ -591,8 +591,10 @@ function creatureCreator:enter()
 	partEditorFrame:CenterWithinArea(love.graphics.getWidth() - 200, 0, 100, 200)
 	partEditorFrame.OnClose = function (object)
 		editorSelected = nil
+		loveframes.setState("none")
 		return false
 	end
+	partEditorFrame:SetState("partEditor")
 	mouseHandle = nil
 end
 
@@ -601,7 +603,7 @@ function creatureCreator:draw()
 	sy = love.graphics.getHeight()
 
 	--body:updatePosition(vector(sx*0.05, 0))
-	
+
 	--Swag
 	--love.graphics.setColor(255, 255, 255)
 	--love.graphics.draw(image, 0, 0, 0, 0.3, 0.3)
@@ -631,11 +633,8 @@ function creatureCreator:draw()
 	end
 
 
-	if editorSelected ~= nil then
-		partEditorFrame:draw()
-	end
+	loveframes.draw()
 
-	
 	if DEBUG_MODE then
 		love.graphics.setColor(255, 255, 255)
 		love.graphics.print("d", 0, 0)
@@ -707,7 +706,10 @@ function creatureCreator:mousepressed( x, y, mb )
 						v:Remove()
 					end
 				end
+				loveframes.SetState("partEditor")
 				editorSelected:editorUI(partEditorFrame)
+			else
+				loveframes.SetState("none")
 			end
 		end
 	end
