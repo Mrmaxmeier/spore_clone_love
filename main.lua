@@ -49,11 +49,13 @@ function Creature:update(dt)
 		v.isHighlighted = false
 	end
 
-	local mPos = vector(cam:mousepos())
-	for i, v in ipairs(self.partList) do
-		if v:insideHitbox(mPos) then
-			v.isHighlighted = true
-			break
+	if not (editorSelected ~= nil and loveframes.util.GetCollisionCount() > 0) then
+		local mPos = vector(cam:mousepos())
+		for i, v in ipairs(self.partList) do
+			if v:insideHitbox(mPos) then
+				v.isHighlighted = true
+				break
+			end
 		end
 	end
 end
@@ -653,8 +655,10 @@ function creatureCreator:update(dt)
 		v.isHighlighted = false
 	end
 
-	res = self:sidebarSelected()
-	if res then res.isHighlighted = true end
+	if not (editorSelected ~= nil and loveframes.util.GetCollisionCount() > 0) then
+		res = self:sidebarSelected()
+		if res then res.isHighlighted = true end
+	end
 
 	for i, v in ipairs(sidebar) do
 		v:update(dt)
@@ -668,7 +672,7 @@ function creatureCreator:mousepressed( x, y, mb )
 
 
 	if mb == "l" then
-		if mouseHandle == nil and not (editorSelected ~= nil and partEditorFrame:GetHover()) then
+		if mouseHandle == nil and not (editorSelected ~= nil and loveframes.util.GetCollisionCount() > 0) then
 			-- search for parts
 			res = creature:selectedPart()
 			if res ~= nil then
