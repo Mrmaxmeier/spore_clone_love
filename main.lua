@@ -342,7 +342,7 @@ function Part:stdEditorUI(frame, rows)
 		object:SetWidth(frame:GetWidth()-20)
 	end
 	rotModSlider.OnValueChanged = function(object)
-		local rotMod = math.floor(object:GetValue()/6)*6
+		local rotMod = math.floor(object:GetValue()/5)*5
 		rotModText:SetText("rotMod: "..rotMod)
 		self:setData("rotMod", rotMod*(math.pi/180))
 	end
