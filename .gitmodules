@@ -1,12 +1,6 @@
 [submodule "hump"]
 	path = hump
 	url = git://github.com/vrld/hump
-[submodule "penglight"]
-	path = penglight
-	url = https://github.com/stevedonovan/Penlight.git
-[submodule "penlight"]
-	path = penlight
-	url = https://github.com/stevedonovan/Penlight.git
 [submodule "loveframes"]
 	path = loveframes
 	url = https://github.com/KennyShields/LoveFrames.git
