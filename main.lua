@@ -591,7 +591,7 @@ function creatureCreator:enter()
 	partEditorFrame:CenterWithinArea(love.graphics.getWidth() - 200, 0, 100, 200)
 	partEditorFrame.OnClose = function (object)
 		editorSelected = nil
-		loveframes.setState("none")
+		loveframes.SetState("none")
 		return false
 	end
 	partEditorFrame:SetState("partEditor")
