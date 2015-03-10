@@ -95,8 +95,12 @@ function Creature:partsChanged()
 	self.partList = {}
     local itemCount = #reversedParts
     for k, v in ipairs(reversedParts) do
-        self.partList[itemCount + 1 - k] = v
+		self.partList[itemCount + 1 - k] = v
     end
+end
+
+function Creature:saveToDisk()
+	--TODO: save creature to disk w/ self.name
 end
 
 
@@ -754,13 +758,6 @@ function creatureCreator:keypressed(key)
 		love.event.quit()
 	end
 
-	if key == "+" then
-		creature.body:setData("corners", creature.body.data.corners + 1)
-	end
-	if key == "-" then
-		creature.body:setData("corners", creature.body.data.corners - 1)
-	end
-
 	if key == "r" then
 		creature = generateCreature(1.0)
 	end
@@ -802,14 +799,54 @@ function creatureCreator:createToolbar()
 
 	local info = loveframes.Create("text", toolbar)
 	info:SetPos(5, 3)
-	info:SetText("Textextextextt\nTestestestest")
+	info:SetText("ESC to quit, r to generate random creature\nrightclick for part options")
 
 	saveButton = loveframes.Create("button", toolbar)
 	saveButton:SetPos(toolbar:GetWidth() - 105, 5)
 	saveButton:SetSize(100, 25)
 	saveButton:SetText("Save")
 	saveButton.OnClick = function()
+		local frame = loveframes.Create("frame")
+		frame:SetName("Save / Cancel?")
+		frame:SetSize(210, 130):Center():SetModal(true)
+		local text = loveframes.Create("text", frame)
+		text:SetText("Name: ")
+		text:SetX(5):SetY(45)
 
+
+		local doSave = function()
+			creature:saveToDisk()
+			frame:Remove()
+		end
+
+		local textinput = loveframes.Create("textinput", frame)
+		textinput:SetPos(5 + 50, 40)
+		textinput:SetWidth(210-60)
+		textinput.OnEnter = function(object)
+			doSave()
+		end
+		textinput.OnTextChanged = function(object, text)
+			creature.name = object:GetText()
+		end
+
+		local form = loveframes.Create("form", frame)
+		form:SetPos(5, 75)
+		form:SetSize(200, 130-(75+15))
+		form:SetLayoutType("horizontal")
+		local saveButt = loveframes.Create("button")
+		saveButt:SetText("Save")
+		saveButt:SetWidth((200/2) - 7)
+		form:AddItem(saveButt)
+		saveButt.OnClick = function(object)
+			doSave()
+		end
+		local cancelButt = loveframes.Create("button")
+		cancelButt:SetText("Cancel")
+		cancelButt:SetWidth((200/2) - 7)
+		cancelButt.OnClick = function(object)
+			frame:Remove()
+		end
+		form:AddItem(cancelButt)
 	end
 	saveButton.Update = function (obj)
 		obj:SetPos(love.graphics.getWidth() - 105, 5):SetSize(100, 25)
