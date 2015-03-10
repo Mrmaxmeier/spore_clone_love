@@ -596,6 +596,7 @@ function creatureCreator:enter()
 	end
 	partEditorFrame:SetState("partEditor")
 	mouseHandle = nil
+	toolbar = self:createToolbar()
 end
 
 function creatureCreator:draw()
@@ -783,7 +784,48 @@ function creatureCreator:sidebarSelected()
 end
 
 
+function creatureCreator:createToolbar()
 
+	local width = love.graphics.getWidth()
+
+	local toolbar = loveframes.Create("panel")
+	toolbar:SetSize(width, 35)
+	toolbar:SetPos(0, 0)
+
+	toolbar.Update = function (obj)
+		obj:SetSize(love.graphics.getWidth(), 35)
+	end
+
+	local info = loveframes.Create("text", toolbar)
+	info:SetPos(5, 3)
+	info:SetText("Textextextextt\nTestestestest")
+
+	saveButton = loveframes.Create("button", toolbar)
+	saveButton:SetPos(toolbar:GetWidth() - 105, 5)
+	saveButton:SetSize(100, 25)
+	saveButton:SetText("Save")
+	saveButton.OnClick = function()
+
+	end
+	saveButton.Update = function (obj)
+		obj:SetPos(love.graphics.getWidth() - 105, 5):SetSize(100, 25)
+	end
+
+	local creatureLoadList = loveframes.Create("multichoice", toolbar)
+	creatureLoadList:SetPos(toolbar:GetWidth() - 250, 5)
+	creatureLoadList:SetWidth(140)
+	creatureLoadList:SetChoice("Load")
+	creatureLoadList.OnChoiceSelected = function(object, choice)
+		print("load", choice)
+	end
+	creatureLoadList.Update = function (obj)
+		obj:SetPos(love.graphics.getWidth() - 250, 5)
+	end
+
+	creatureLoadList:AddChoice("Load, eh?")
+	creatureLoadList:Sort()
+	return toolbar
+end
 
 
 function love.load()
@@ -798,11 +840,10 @@ end
 
 function love.update(dt)
 	if DEBUG_MODE then
-		lovebird.update()
-		--horrible performance on windows
+		lovebird.update() --horrible performance on windows?!
 	end
 end
 
 function love.draw()
-	love.window.setTitle("SporeClone (Kawaii edition)"..love.timer.getFPS().. "FPS")
+	love.window.setTitle("SporeClone (Kawaii-edition) "..love.timer.getFPS().. "FPS")
 end
