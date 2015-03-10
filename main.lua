@@ -828,6 +828,8 @@ function creatureCreator:createToolbar()
 		textinput.OnTextChanged = function(object, text)
 			creature.name = object:GetText()
 		end
+		textinput:SetFocus(true)
+		textinput:SetText(creature.name)
 
 		local form = loveframes.Create("form", frame)
 		form:SetPos(5, 75)
