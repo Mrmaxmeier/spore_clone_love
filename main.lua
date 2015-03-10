@@ -588,13 +588,13 @@ function creatureCreator:enter()
 	partEditorFrame:SetName("Part Editor")
 	partEditorFrame:SetResizable(true)
 	partEditorFrame:SetMinWidth(200):SetMinHeight(175):SetHeight(200)
-	partEditorFrame:CenterWithinArea(love.graphics.getWidth() - 200, 0, 100, 200)
+	partEditorFrame:CenterWithinArea(love.graphics.getWidth() - 200, 35, 135, 200)
 	partEditorFrame.OnClose = function (object)
 		editorSelected = nil
-		loveframes.SetState("none")
+		partEditorFrame:SetVisible(false)
 		return false
 	end
-	partEditorFrame:SetState("partEditor")
+	partEditorFrame:SetVisible(false)
 	mouseHandle = nil
 	toolbar = self:createToolbar()
 end
@@ -707,10 +707,14 @@ function creatureCreator:mousepressed( x, y, mb )
 						v:Remove()
 					end
 				end
-				loveframes.SetState("partEditor")
+				if not partEditorFrame:GetVisible() then
+					partEditorFrame:CenterWithinArea(love.graphics.getWidth() - 200, 35, 135, 200)
+				end
+				partEditorFrame:SetVisible(true)
+
 				editorSelected:editorUI(partEditorFrame)
 			else
-				loveframes.SetState("none")
+				partEditorFrame:SetVisible(false)
 			end
 		end
 	end
