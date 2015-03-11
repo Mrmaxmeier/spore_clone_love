@@ -712,7 +712,7 @@ function creatureCreator:mousepressed( x, y, mb )
 					end
 				end
 				if not partEditorFrame:GetVisible() then
-					partEditorFrame:CenterWithinArea(love.graphics.getWidth() - 200, 35, 135, 200)
+					partEditorFrame:CenterWithinArea(love.graphics.getWidth() - 210, 35, 135, 200)
 				end
 				partEditorFrame:SetVisible(true)
 
@@ -865,8 +865,16 @@ function creatureCreator:createToolbar()
 		obj:SetPos(love.graphics.getWidth() - 250, 5)
 	end
 
-	creatureLoadList:AddChoice("Load, eh?")
-	creatureLoadList:Sort()
+	local oldmousePressed = creatureLoadList.mousepressed
+	creatureLoadList.mousepressed = function (self, x, y, button)
+		self:Clear()
+		self:SetChoice("Load")
+		--insert all loadable creatures
+		self:AddChoice("dynamic stuff")
+		--
+		self:Sort()
+		oldmousePressed(self, x, y, button)
+	end
 	return toolbar
 end
 
