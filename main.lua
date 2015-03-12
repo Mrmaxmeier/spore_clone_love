@@ -101,6 +101,15 @@ end
 
 function Creature:saveToDisk()
 	--TODO: save creature to disk w/ self.name
+	if not love.filesystem.exists("creatures") then
+		love.filesystem.createDirectory("creatures")
+	end
+
+	local file = love.filesystem.newFile("creatures/"..self.name)
+	file:open("w")
+	local t = {name = self.name, body = self.body:ser()}
+	file:write(serpent.dump(t))
+	file:close()
 end
 
 
@@ -130,7 +139,12 @@ function generateCreature(complexity)
 	return creature
 end
 
-
+function loadCreature(t)
+	local creature = Creature()
+	creature.name = t.name
+	creature.body = loadPart(t.body)
+	return creature
+end
 
 Part = Class{
 	init = function(self)
@@ -860,6 +874,15 @@ function creatureCreator:createToolbar()
 	creatureLoadList:SetChoice("Load")
 	creatureLoadList.OnChoiceSelected = function(object, choice)
 		print("load", choice)
+		if love.filesystem.exists("creatures/"..choice) then
+			local file = love.filesystem.newFile("creatures/"..choice)
+			file:open("r")
+			local str = file:read()
+			ok, copy = serpent.load(str)
+			file:close()
+			creature = loadCreature(copy)
+			creature:partsChanged()
+		end
 	end
 	creatureLoadList.Update = function (obj)
 		obj:SetPos(love.graphics.getWidth() - 250, 5)
@@ -870,7 +893,11 @@ function creatureCreator:createToolbar()
 		self:Clear()
 		self:SetChoice("Load")
 		--insert all loadable creatures
-		self:AddChoice("dynamic stuff")
+		local files = love.filesystem.getDirectoryItems("creatures")
+		for k, file in ipairs(files) do
+			self:AddChoice(file)
+		end
+
 		--
 		self:Sort()
 		oldmousePressed(self, x, y, button)
