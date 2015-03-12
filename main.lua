@@ -428,7 +428,7 @@ function Part_Body:setData(key, val)
 	if key == "corners" then
 		if val < 3 then val = 3 end
 		if val < self.data.corners then
-			for i, v in ipairs(self.connected) do
+			for i, v in pairs(self.connected) do
 				if i > val then v:detach() end
 			end
 		end
