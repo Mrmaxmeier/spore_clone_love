@@ -892,6 +892,11 @@ function creatureCreator:createToolbar()
 	creatureLoadList.mousepressed = function (self, x, y, button)
 		self:Clear()
 		self:SetChoice("Load")
+
+		if not love.filesystem.exists("creatures") then
+			love.filesystem.createDirectory("creatures")
+		end
+
 		--insert all loadable creatures
 		local files = love.filesystem.getDirectoryItems("creatures")
 		for k, file in ipairs(files) do
