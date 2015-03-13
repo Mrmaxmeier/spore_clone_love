@@ -116,7 +116,11 @@ end
 function generateCreature(complexity)
 	local numParts = love.math.random(3, complexity*12)
 	local creature = Creature()
-	creature.body = Part_Body()
+	for i,v in ipairs(ALL_PARTS) do
+		if v.name == "Part_Body" then
+			creature.body = v()
+		end
+	end
 	creature:partsChanged()
 
 	while #creature.partList < numParts do
@@ -391,190 +395,14 @@ function Part:clone()
 	return loadPart(self:ser())
 end
 
+ALL_PARTS = {}
 
-
-Part_Body = Class{__includes=Part, name="Part_Body"}
-
-function Part_Body:getHandlePositions_Rel()
-	if not self.data.corners then self.data.corners = 3 end
-	local res = {}
-	for i=0, self.data.corners-1 do
-		local pos = vector(100 * self.size, 0):rotated(2.0 * math.pi / self.data.corners * (self.data.corners-i) + self.rotation)
-		table.insert(res, pos)
-	end
-	return res
+function registerPart(part)
+	table.insert(ALL_PARTS, part)
+	print("registered", part.name)
 end
 
-function Part_Body:getHandleRotation()
-	if not self.data.corners then self.data.corners = 3 end
-	local res = {}
-	for i=0, self.data.corners-1 do
-		table.insert(res, (2.0 * math.pi / self.data.corners) * (self.data.corners-i) + self.rotation)
-	end
-	return res
-end
-
-function Part_Body:drawThis()
-	if not self.data.corners then self.data.corners = 3 end
-	local verts = genPoly(self.position, self.data.corners, 100*self.size, self.rotation)
-	love.graphics.setColor( self:getCol(0, 0, 0) )
-	love.graphics.polygon("fill", verts)
-	love.graphics.setColor( self:getCol(255, 255, 255) )
-	love.graphics.polygon("line", verts)
-end
-
-
-function Part_Body:setData(key, val)
-	if key == "corners" then
-		if val < 3 then val = 3 end
-		if val < self.data.corners then
-			for i, v in pairs(self.connected) do
-				if i > val then v:detach() end
-			end
-		end
-		self.data[key] = val
-	else self.data[key] = val end
-end
-
-
-function Part_Body:editorUI(frame)
-	local rows = 7
-	self:stdEditorUI(frame, rows)
-
-	local text = loveframes.Create("text", frame)
-	text.Update = function(object, dt)
-		object:CenterX()
-		object:SetY(frame:GetHeight()/rows*5)
-	end
-	local cornersSlider = loveframes.Create("slider", frame)
-	cornersSlider:SetPos(5, 30)
-	cornersSlider:SetWidth(290)
-	cornersSlider:SetMinMax(3, 8.5)
-	cornersSlider.Update = function(object, dt)
-		object:CenterX()
-		object:SetY(frame:GetHeight()/rows*6)
-		object:SetWidth(frame:GetWidth()-20)
-	end
-	cornersSlider.OnValueChanged = function(object)
-		local corners = math.floor(object:GetValue())
-		text:SetText("#corners: "..corners)
-		self:setData("corners", corners)
-	end
-
-	cornersSlider:SetValue(self.data.corners)
-end
-
-
-Part_Eye = Class{__includes=Part, name="Part_Eye"}
-
-function Part_Eye:drawThis()
-	local verts = genPoly(self.position, 4, 40*self.size, self.rotation)
-	love.graphics.setColor( self:getCol(255, 255, 255) )
-	love.graphics.polygon("fill", verts)
-	love.graphics.setColor( self:getCol(0, 0, 0) )
-	love.graphics.polygon("line", verts)
-
-	local diff = (vector(cam:mousepos()) - self.position);
-	local diff2 = diff:clone()
-	if diff:len() > 8.0*self.size then diff = diff:normalized() * 8.0*self.size end
-
-	local verts = genPoly(self.position + diff, 4, 25*self.size, self.rotation)
-	love.graphics.setColor( self:getCol(0, 0, 255) )
-	love.graphics.polygon("fill", verts)
-	love.graphics.setColor( self:getCol(0, 0, 255) )
-	love.graphics.polygon("line", verts)
-
-
-
-	if diff2:len() > 12.0*self.size then diff2 = diff2:normalized() * 12.0*self.size end
-	local verts = genPoly(self.position + diff2, 4, 15*self.size, self.rotation)
-	love.graphics.setColor( self:getCol(0, 0, 0) )
-	love.graphics.polygon("fill", verts)
-	love.graphics.setColor( self:getCol(0, 0, 0) )
-	love.graphics.polygon("line", verts)
-end
-
-function Part_Eye:stats()
-	return {partnum = 1, vision = 1}
-end
-
-Part_Fin = Class{__includes=Part, name="Part_Fin", data={phase=0}}
-
-function Part_Fin:update(dt)
-	if not self.data.phase then self.data.phase = 0 end
-	self.data.phase = self.data.phase + dt * 5.0
-end
-
-function Part_Fin:drawThis()
-	if not self.data.phase then self.data.phase = 0 end
-
-	local dir = vector(100*self.size, 0):rotated(self.rotation)
-
-	for i=0, 4 do
-		local speed = 1.0 * 2.0
-		local pos = self.position + dir * i/4.0
-		pos = pos + vector(0, math.sin(self.data.phase * speed + i) * i):rotated(self.rotation)
-		local verts = genPoly(pos, 4, 35*self.size - i*self.size * 5.0, self.rotation + math.pi*0.25)
-		local cMod = (255/2)/4*i
-		love.graphics.setColor( self:getCol(255-cMod, 255-cMod, 255-cMod) )
-		love.graphics.polygon("fill", verts)
-		love.graphics.setColor( self:getCol(0, 0, 0) )
-		love.graphics.polygon("line", verts)
-	end
-
-end
-
-
-function Part_Fin:stats()
-	return {partnum = 1, speed = 1}
-end
-
-
-
-
-Part_Mouth = Class{__includes=Part, name="Part_Mouth", data={phase=0}}
-
-function Part_Mouth:update(dt)
-	if not self.data.phase then self.data.phase = 0 end
-	self.data.phase = self.data.phase + dt * 5.0
-end
-
-function Part_Mouth:drawThis()
-	if not self.data.phase then self.data.phase = 0 end
-
-	local dir = vector(100*self.size, 0):rotated(self.rotation)
-	for i=0, 4 do
-		local speed = 1.0 * 2.0
-		local pos = self.position + dir * i/4.0
-		pos = pos + vector(0, 5*math.abs(math.sin(self.data.phase))*i*self.size):rotated(self.rotation)
-		local verts = genPoly(pos, 4, 35*self.size - i*self.size * 5.0, self.rotation + math.pi*0.25)
-		local cMod = (255/2)/4*i
-		love.graphics.setColor( self:getCol(255-cMod, 255-cMod, 255-cMod) )
-		love.graphics.polygon("fill", verts)
-		love.graphics.setColor( self:getCol(0, 0, 0) )
-		love.graphics.polygon("line", verts)
-	end
-	local dir = vector(100*self.size, 0):rotated(self.rotation)
-	for i=0, 4 do
-		local speed = 1.0 * 2.0
-		local pos = self.position + dir * i/4.0
-		pos = pos + vector(0, -5*math.abs(math.sin(self.data.phase))*i*self.size):rotated(self.rotation)
-		local verts = genPoly(pos, 4, 35*self.size - i*self.size * 5.0, self.rotation + math.pi*0.25)
-		local cMod = (255/2)/4*i
-		love.graphics.setColor( self:getCol(255-cMod, 255-cMod, 255-cMod) )
-		love.graphics.polygon("fill", verts)
-		love.graphics.setColor( self:getCol(0, 0, 0) )
-		love.graphics.polygon("line", verts)
-	end
-
-end
-
-
-function Part_Mouth:stats()
-	return {partnum = 1, mouth = 1}
-end
-
-ALL_PARTS = {Part_Body, Part_Eye, Part_Fin, Part_Mouth}
+require("parts.loadAll")
 
 creatureCreator = {}
 
