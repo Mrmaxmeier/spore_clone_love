@@ -14,6 +14,7 @@ require("creature")
 require("part")
 
 require("creatureCreator")
+require("cellStage")
 
 ALL_PARTS = {}
 
@@ -42,4 +43,14 @@ end
 
 function love.draw()
 	love.window.setTitle("SporeClone (Kawaii-edition) "..love.timer.getFPS().. "FPS")
+end
+
+
+function love.keypressed( key, isrepeat )
+	if key == "1" then
+		Gamestate.switch(cellStage)
+	end
+	if key == "2" then
+		Gamestate.switch(creatureCreator)
+	end
 end

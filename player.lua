@@ -34,3 +34,12 @@ end
 function Player:move(x, y)
 
 end
+
+function Player:draw()
+	if self.creature then
+		self.creature:draw()
+	end
+end
+
+
+OwnPlayer = Class{__includes=Player}
