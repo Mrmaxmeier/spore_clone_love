@@ -8,13 +8,11 @@ function creatureCreator:enter()
 	creature.body:updatePosition(vector(0, 0))
 	cam:lookAt(creature.body.position:unpack())
 
-	print("Stats:")
-	pretty.dump(creature.body:getAllStats())
+	--print("Stats:")
+	--pretty.dump(creature.body:getAllStats())
 
 	love.graphics.setNewFont(30)
 
-	iconImage = love.graphics.newImage( "icon.png" )
-	print("SetIcon:", love.window.setIcon(iconImage:getData()))
 
 	sidebar = {}
 	for i, v in ipairs(ALL_PARTS) do
