@@ -4,7 +4,9 @@ creatureCreator = {}
 function creatureCreator:enter()
 	cam = Camera(0, 0)
 	cam:zoomTo(2)
-	creature = generateCreature(1.0)
+	if not creature then
+		creature = generateCreature(1.0)
+	end
 	creature.body:updatePosition(vector(0, 0))
 	cam:lookAt(creature.body.position:unpack())
 

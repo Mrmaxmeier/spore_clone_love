@@ -6,7 +6,11 @@ function cellStage:enter()
 	-- body
 
 	ownPlayer = OwnPlayer()
-	ownPlayer.creature = generateCreature(1.0)
+	if creature then
+		ownPlayer.creature = creature
+	else
+		ownPlayer.creature = generateCreature(1.0)
+	end
 	players = {ownPlayer}
 
 
@@ -17,15 +21,15 @@ end
 
 function cellStage:update(dt)
 	-- body
-	for i, v in ipairs(players) do
-		v:update(dt)
+	for i, player in ipairs(players) do
+		player:update(dt, false)
 	end
 end
 
 function cellStage:draw()
 	cam:attach()
-	for i, v in ipairs(players) do
-		v:draw()
+	for i, player in ipairs(players) do
+		player:draw()
 	end
 	cam:detach()
 end

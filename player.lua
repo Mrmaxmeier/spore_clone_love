@@ -25,6 +25,11 @@ function Player:update(dt)
 		self.dead = true
 		self:onDeath()
 	end
+
+	if self.creature then
+		self.creature.body:updatePosition(self.position)
+		self.creature:update(dt)
+	end
 end
 
 function Player:spawn()

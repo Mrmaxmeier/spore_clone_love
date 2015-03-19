@@ -15,11 +15,16 @@ function Creature:updateStats()
 	end
 end
 
-function Creature:update(dt)
+function Creature:update(dt, isEditor)
+	isEditor = isEditor or true
+
 	if self.body then
 		self.body:updateAll(dt)
 	end
 
+	if not isEditor then
+		return
+	end
 
 	for i, v in ipairs(self.partList) do
 		v.isHighlighted = false
