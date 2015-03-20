@@ -26,6 +26,9 @@ function Player:update(dt)
 		self:onDeath()
 	end
 
+	self.velocity = vector(self.speed, 0):rotated(self.direction)
+	self.position = self.position + self.velocity * dt
+
 	if self.creature then
 		self.creature.body:updatePosition(self.position)
 		self.creature:update(dt)
@@ -36,13 +39,22 @@ function Player:spawn()
 	self:onSpawn()
 end
 
-function Player:move(x, y)
-
+function Player:move(vec)
+	self.speed = vec:len() * self.stats.speed * 100
+	self.direction = vec:angleTo()
 end
 
 function Player:draw()
 	if self.creature then
 		self.creature:draw()
+	end
+end
+
+function Player:updateStats()
+	if self.creature then
+		self.creature:updateStats()
+		self.stats = self.creature.stats
+		if not self.stats.speed then self.stats.speed = 0 end
 	end
 end
 

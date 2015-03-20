@@ -30,7 +30,8 @@ function love.load()
 	print("\aSWAG")
 
 	Gamestate.registerEvents{'draw', 'update', 'quit', 'mousepressed',
-							 'mousereleased', 'mousemoved', 'keypressed', 'textinput'}
+							 'mousereleased', 'mousemoved', 'keypressed',
+							 'textinput', 'joystickadded', 'joystickremoved'}
 	Gamestate.switch(creatureCreator)
 
 end

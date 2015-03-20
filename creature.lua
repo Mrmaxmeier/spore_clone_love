@@ -3,8 +3,6 @@ Creature = Class{
 		self.body = nil
 		self.stats = {}
 		self.name = "Unnamed Creature"
-		self.position = vector(0, 0)
-		self.velocity = vector(0, 0)
 		self.partList = {}
 	end
 }
