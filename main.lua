@@ -25,6 +25,8 @@ end
 
 require("parts.loadAll")
 
+myJoystick = nil
+
 
 function love.load()
 	print("\aSWAG")
@@ -53,5 +55,20 @@ function love.keypressed( key, isrepeat )
 	end
 	if key == "2" then
 		Gamestate.switch(creatureCreator)
+	end
+end
+
+
+function love.joystickadded(joystick)
+	myJoystick = joystick
+	print(joystick:getName().." added!")
+end
+
+function love.joystickremoved(joystick)
+	print(joystick:getName().." removed!")
+	if myJoystick ~= nil then
+		if not myJoystick:isConnected() then
+			myJoystick = nil
+		end
 	end
 end

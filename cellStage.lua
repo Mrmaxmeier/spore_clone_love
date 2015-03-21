@@ -3,8 +3,6 @@ cellStage = {}
 require("player")
 
 function cellStage:enter()
-	-- body
-	myJoystick = nil
 	ownPlayer = OwnPlayer()
 	if creature then
 		ownPlayer.creature = creature
@@ -27,8 +25,8 @@ function cellStage:update(dt)
 	if love.keyboard.isDown("s") then mv.y = mv.y + 1 end
 	if love.keyboard.isDown("d") then mv.x = mv.x + 1 end
 	if myJoystick then
-		mv.x = mv.x + myJoystick:getAxis(0)
-		mv.y = mv.y + myJoystick:getAxis(1)
+		mv.x = mv.x + myJoystick:getAxis(1)
+		mv.y = mv.y + myJoystick:getAxis(2)
 	end
 	if mv:len() > 1.0 then
 		mv:normalize_inplace()
@@ -47,14 +45,4 @@ function cellStage:draw()
 		player:draw()
 	end
 	cam:detach()
-end
-
-function cellStage:joystickadded(joystick)
-	myJoystick = joystick
-end
-
-function cellStage:joystickremoved(joystick)
-	if not myJoystick:isConnected() then
-		myJoystick = nil
-	end
 end
