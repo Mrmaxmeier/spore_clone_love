@@ -1,3 +1,5 @@
+require("parts.fin")
+
 Part_SpeedyFin = Class{__includes=Part_Fin, name="Part_SpeedyFin"}
 
 function Part_SpeedyFin:setUp()

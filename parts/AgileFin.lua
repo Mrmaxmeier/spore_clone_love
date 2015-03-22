@@ -1,3 +1,5 @@
+require("parts.fin")
+
 Part_AgileFin = Class{__includes=Part_Fin, name="Part_AgileFin"}
 
 function Part_AgileFin:setUp()
