@@ -3,13 +3,13 @@ Player = Class{
 		self.creature = nil
 		self.position = vector(0, 0)
 		self.velocity = vector(0, 0)
-		self.rotation = 0
 		self.type = "BaseClass"
 		self.stats = {}
 		self.name = "Player"
 		self.hp = 0
-		self.speed = 0
-		self.direction = 0
+		self.mVec = vector(0, 0)
+		self.mVecNew = vector(0, 0)
+		self.powerlevel = 0
 		self.dead = false
 	end,
 }
@@ -26,10 +26,13 @@ function Player:update(dt)
 		self:onDeath()
 	end
 
-	self.velocity = vector(self.speed, 0):rotated(self.direction)
+	self:updateMovement(dt)
+	self.velocity = self.velocity + self.mVec:normalized() * self.powerlevel
+	self.velocity = self.velocity - 0.0001*self.velocity*self.velocity:len()
 	self.position = self.position + self.velocity * dt
 
 	if self.creature then
+		self.creature.body.rotation = self.mVec:angleTo()
 		self.creature.body:updatePosition(self.position)
 		self.creature:update(dt)
 	end
@@ -40,8 +43,19 @@ function Player:spawn()
 end
 
 function Player:move(vec)
-	self.speed = vec:len() * self.stats.speed * 100
-	self.direction = vec:angleTo()
+	--self.newSpeed = vec:len() * self.stats.speed * 100
+	--self.newDirection = vec:angleTo()
+	self.mVecNew = vec * self.stats.speed
+end
+
+function Player:updateMovement(dt)
+	if self.mVec:len() == 0 then
+		self.mVec.x = math.random()
+		self.mVec.y = math.random()
+	end
+	dirVec = self.mVec:normalized() + self.mVecNew*dt
+	self.mVec = self.mVec:len() * dirVec:normalized()
+	self.powerlevel = math.max(0, dirVec * self.mVecNew) * self.stats.speed
 end
 
 function Player:draw()
@@ -55,6 +69,7 @@ function Player:updateStats()
 		self.creature:updateStats()
 		self.stats = self.creature.stats
 		if not self.stats.speed then self.stats.speed = 0 end
+		self.stats.agility = self.stats.speed
 	end
 end
 
