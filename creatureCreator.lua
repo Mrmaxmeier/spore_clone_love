@@ -35,6 +35,9 @@ function creatureCreator:enter()
 	partEditorFrame:SetVisible(false)
 	mouseHandle = nil
 	toolbar = self:createToolbar()
+
+
+	love.graphics.setBackgroundColor( 0, 0, 205 )
 end
 
 function creatureCreator:draw()
@@ -46,7 +49,6 @@ function creatureCreator:draw()
 	--Swag
 	--love.graphics.setColor(255, 255, 255)
 	--love.graphics.draw(image, 0, 0, 0, 0.3, 0.3)
-	love.graphics.setBackgroundColor( 0, 0, 205 )
 
 	cam:attach()
 	creature:draw()

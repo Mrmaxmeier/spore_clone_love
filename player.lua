@@ -45,7 +45,7 @@ end
 function Player:move(vec)
 	--self.newSpeed = vec:len() * self.stats.speed * 100
 	--self.newDirection = vec:angleTo()
-	self.mVecNew = vec * self.stats.speed
+	self.mVecNew = vec * self.stats.agility
 end
 
 function Player:updateMovement(dt)
@@ -68,8 +68,12 @@ function Player:updateStats()
 	if self.creature then
 		self.creature:updateStats()
 		self.stats = self.creature.stats
-		if not self.stats.speed then self.stats.speed = 0 end
-		self.stats.agility = self.stats.speed
+		if not self.stats.speed or self.stats.speed < 0 then
+			self.stats.speed = 0
+		end
+		if not self.stats.agility or self.stats.agility < 0 then
+			self.stats.agility = 0
+		end
 	end
 end
 

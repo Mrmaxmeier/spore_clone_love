@@ -7,9 +7,14 @@ Part = Class{
 		self.size = 1
 		self.rotation = 0
 		self.isHighlighted = false
+		self:setUp()
 	end,
 	name="Part"
 }
+
+function Part:setUp()
+end
+
 
 function Part:getCol(r, g, b)
 	if self.isHighlighted then

@@ -14,8 +14,9 @@ function cellStage:enter()
 
 
 	cam = Camera(0, 0)
-	cam:zoomTo(2)
+	cam:zoomTo(1)
 	cam:lookAt(ownPlayer.position:unpack())
+	love.graphics.setBackgroundColor( 0, 0, 205 )
 end
 
 function cellStage:update(dt)
@@ -45,4 +46,8 @@ function cellStage:draw()
 		player:draw()
 	end
 	cam:detach()
+
+	love.graphics.setColor(0, 0, 0)
+	love.graphics.print("Speed: "..ownPlayer.stats.speed, 0, 0)
+	love.graphics.print("Agility: "..ownPlayer.stats.agility, 0, 25)
 end
