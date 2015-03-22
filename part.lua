@@ -173,7 +173,7 @@ function Part:ser()
 end
 
 function Part:loadData( t )
-	self.data = tablex.deepcopy(t)
+	self.data = tablex.update(self.data, t)
 end
 
 function Part:setData(key, data)
