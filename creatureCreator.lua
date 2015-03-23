@@ -7,6 +7,7 @@ function creatureCreator:enter()
 	if not creature then
 		creature = generateCreature(1.0)
 	end
+	creature.body.rotation = 0
 	creature.body:updatePosition(vector(0, 0))
 	cam:lookAt(creature.body.position:unpack())
 
