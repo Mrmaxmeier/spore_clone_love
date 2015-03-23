@@ -29,10 +29,6 @@ function cellStage:update(dt)
 		mv.x = mv.x + myJoystick:getAxis(1)
 		mv.y = mv.y + myJoystick:getAxis(2)
 	end
-	if mv:len() > 1.0 then
-		mv:normalize_inplace()
-	end
-
 	ownPlayer:move(mv)
 
 	for i, player in ipairs(players) do

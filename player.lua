@@ -45,6 +45,10 @@ end
 function Player:move(vec)
 	--self.newSpeed = vec:len() * self.stats.speed * 100
 	--self.newDirection = vec:angleTo()
+	if vec:len() > 1 then
+		vec:normalize_inplace()
+	end
+
 	self.mVecNew = vec * self.stats.agility
 end
 
