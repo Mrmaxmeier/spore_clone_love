@@ -43,7 +43,7 @@ function cellStage:draw()
 	end
 	cam:detach()
 
-	love.graphics.setColor(0, 0, 0)
+	love.graphics.setColor(255, 255, 255)
 	love.graphics.print("Speed: "..ownPlayer.stats.speed, 0, 0)
 	love.graphics.print("Agility: "..ownPlayer.stats.agility, 0, 25)
 end
